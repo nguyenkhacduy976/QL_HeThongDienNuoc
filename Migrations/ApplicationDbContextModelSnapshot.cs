@@ -1,0 +1,472 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using QL_HethongDiennuoc.Data;
+
+#nullable disable
+
+namespace QL_HethongDiennuoc.Migrations
+{
+    [DbContext(typeof(ApplicationDbContext))]
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    {
+        protected override void BuildModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Bill", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BillNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("IssueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("PaidAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ReadingId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ReadingId")
+                        .IsUnique();
+
+                    b.ToTable("Bills");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Customer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("IdentityCard")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Customers");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Meter", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("InstallDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("MeterNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("Meters");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Payment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("BillId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("PaymentDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BillId");
+
+                    b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Reading", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Consumption")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CurrentReading")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("MeterId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal>("PreviousReading")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("ReadingDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MeterId");
+
+                    b.ToTable("Readings");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Service", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("RestoreDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SuspendDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("Services");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Tariff", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("EffectiveDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal?>("MaxKwh")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MinKwh")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PricePerUnit")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ServiceType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Tier")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tariffs");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            EffectiveDate = new DateTime(2024, 12, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            MaxKwh = 50m,
+                            MinKwh = 0m,
+                            PricePerUnit = 1678m,
+                            ServiceType = 1,
+                            Tier = 1,
+                            Description = "Bậc 1: 0-50 kWh"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            EffectiveDate = new DateTime(2024, 12, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            MaxKwh = 100m,
+                            MinKwh = 51m,
+                            PricePerUnit = 1734m,
+                            ServiceType = 1,
+                            Tier = 2,
+                            Description = "Bậc 2: 51-100 kWh"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            EffectiveDate = new DateTime(2024, 12, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            MaxKwh = 200m,
+                            MinKwh = 101m,
+                            PricePerUnit = 2014m,
+                            ServiceType = 1,
+                            Tier = 3,
+                            Description = "Bậc 3: 101-200 kWh"
+                        });
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FullName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastLoginDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedDate = new DateTime(2024, 12, 19, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "admin@qldienuoc.vn",
+                            FullName = "Administrator",
+                            IsActive = true,
+                            PasswordHash = "$2a$11$vO8u8LJNqPeGHqS9x6YuMOp.zQVX4xqHcLxY2fMD/oZQVxYzd5Eni",
+                            Role = 1,
+                            Username = "admin"
+                        });
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Bill", b =>
+                {
+                    b.HasOne("QL_HethongDiennuoc.Models.Entities.Customer", "Customer")
+                        .WithMany("Bills")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QL_HethongDiennuoc.Models.Entities.Reading", "Reading")
+                        .WithOne("Bill")
+                        .HasForeignKey("QL_HethongDiennuoc.Models.Entities.Bill", "ReadingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Reading");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Meter", b =>
+                {
+                    b.HasOne("QL_HethongDiennuoc.Models.Entities.Customer", "Customer")
+                        .WithMany("Meters")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Payment", b =>
+                {
+                    b.HasOne("QL_HethongDiennuoc.Models.Entities.Bill", "Bill")
+                        .WithMany("Payments")
+                        .HasForeignKey("BillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bill");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Reading", b =>
+                {
+                    b.HasOne("QL_HethongDiennuoc.Models.Entities.Meter", "Meter")
+                        .WithMany("Readings")
+                        .HasForeignKey("MeterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Meter");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Service", b =>
+                {
+                    b.HasOne("QL_HethongDiennuoc.Models.Entities.Customer", "Customer")
+                        .WithMany("Services")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Bill", b =>
+                {
+                    b.Navigation("Payments");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Customer", b =>
+                {
+                    b.Navigation("Bills");
+
+                    b.Navigation("Meters");
+
+                    b.Navigation("Services");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Meter", b =>
+                {
+                    b.Navigation("Readings");
+                });
+
+            modelBuilder.Entity("QL_HethongDiennuoc.Models.Entities.Reading", b =>
+                {
+                    b.Navigation("Bill");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
