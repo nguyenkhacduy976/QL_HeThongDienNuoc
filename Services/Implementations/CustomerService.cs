@@ -1,0 +1,66 @@
+using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using QL_HethongDiennuoc.Data;
+using QL_HethongDiennuoc.Models.DTOs;
+using QL_HethongDiennuoc.Models.Entities;
+using QL_HethongDiennuoc.Services.Interfaces;
+
+namespace QL_HethongDiennuoc.Services.Implementations;
+
+public class CustomerService : ICustomerService
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IMapper _mapper;
+
+    public CustomerService(ApplicationDbContext context, IMapper mapper)
+    {
+        _context = context;
+        _mapper = mapper;
+    }
+
+    public async Task<List<CustomerDto>> GetAllCustomersAsync()
+    {
+        var customers = await _context.Customers.ToListAsync();
+        return _mapper.Map<List<CustomerDto>>(customers);
+    }
+
+    public async Task<CustomerDto?> GetCustomerByIdAsync(int id)
+    {
+        var customer = await _context.Customers.FindAsync(id);
+        return customer == null ? null : _mapper.Map<CustomerDto>(customer);
+    }
+
+    public async Task<CustomerDto> CreateCustomerAsync(CreateCustomerDto dto)
+    {
+        var customer = _mapper.Map<Customer>(dto);
+        customer.CreatedDate = DateTime.Now;
+        customer.IsActive = true;
+
+        _context.Customers.Add(customer);
+        await _context.SaveChangesAsync();
+
+        return _mapper.Map<CustomerDto>(customer);
+    }
+
+    public async Task<CustomerDto?> UpdateCustomerAsync(int id, UpdateCustomerDto dto)
+    {
+        var customer = await _context.Customers.FindAsync(id);
+        if (customer == null) return null;
+
+        _mapper.Map(dto, customer);
+        await _context.SaveChangesAsync();
+
+        return _mapper.Map<CustomerDto>(customer);
+    }
+
+    public async Task<bool> DeleteCustomerAsync(int id)
+    {
+        var customer = await _context.Customers.FindAsync(id);
+        if (customer == null) return false;
+
+        _context.Customers.Remove(customer);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+}
