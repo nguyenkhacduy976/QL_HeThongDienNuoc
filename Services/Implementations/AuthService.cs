@@ -55,18 +55,17 @@ public class AuthService : IAuthService
         // Check if username exists
         var existingUser = await _context.Users
             .FirstOrDefaultAsync(u => u.Username == dto.Username);
+        // Validate role
+        if (!Enum.IsDefined(typeof(UserRole), dto.Role))
+            throw new Exception("Invalid role specified");
 
-        if (existingUser != null)
+        // Check if username or email already exists
+        if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
             throw new Exception("Username already exists");
 
-        // Check if email exists
-        var existingEmail = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == dto.Email);
-
-        if (existingEmail != null)
+        if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
             throw new Exception("Email already exists");
 
-        // Create new user
         var user = new User
         {
             Username = dto.Username,
@@ -80,6 +79,24 @@ public class AuthService : IAuthService
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
+
+        // If role is Customer, also create a Customer entity
+        if ((UserRole)dto.Role == UserRole.Customer)
+        {
+            var customer = new Customer
+            {
+                FullName = dto.FullName ?? dto.Username,
+                Email = dto.Email,
+                PhoneNumber = null, // Can be updated later by admin or user
+                Address = "Chưa cập nhật", // Can be updated later
+                UserId = user.Id,
+                CreatedDate = DateTime.Now,
+                IsActive = true
+            };
+
+            _context.Customers.Add(customer);
+            await _context.SaveChangesAsync();
+        }
 
         return user;
     }

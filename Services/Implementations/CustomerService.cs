@@ -58,6 +58,16 @@ public class CustomerService : ICustomerService
         var customer = await _context.Customers.FindAsync(id);
         if (customer == null) return false;
 
+        // Also delete the associated User if exists
+        if (customer.UserId.HasValue)
+        {
+            var user = await _context.Users.FindAsync(customer.UserId.Value);
+            if (user != null)
+            {
+                _context.Users.Remove(user);
+            }
+        }
+
         _context.Customers.Remove(customer);
         await _context.SaveChangesAsync();
 
