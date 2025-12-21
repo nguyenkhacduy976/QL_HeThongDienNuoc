@@ -6,16 +6,12 @@ public static class DbInitializer
 {
     public static void Initialize(ApplicationDbContext context)
     {
-        // Ensure database is created
-        context.Database.EnsureCreated();
-
         // Check if already seeded
         if (context.Users.Any())
         {
             return; // DB has been seeded
         }
 
-        Console.WriteLine("⏳ Đang seed dữ liệu mẫu...");
 
         // Seed Admin User
         var admin = new User
@@ -101,11 +97,5 @@ public static class DbInitializer
         };
         context.Meters.AddRange(meters);
         context.SaveChanges();
-
-        Console.WriteLine("✓ Seed data hoàn tất!");
-        Console.WriteLine($"  - {context.Users.Count()} users");
-        Console.WriteLine($"  - {context.Customers.Count()} customers");
-        Console.WriteLine($"  - {context.Meters.Count()} meters");
-        Console.WriteLine($"  - {context.Tariffs.Count()} tariffs");
     }
 }

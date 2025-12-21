@@ -29,6 +29,10 @@ public class Customer
 
     public bool IsActive { get; set; } = true;
 
+    // User relationship (nullable for existing customers)
+    public int? UserId { get; set; }
+    public User? User { get; set; }
+
     // Navigation properties
     public ICollection<Meter> Meters { get; set; } = new List<Meter>();
     public ICollection<Bill> Bills { get; set; } = new List<Bill>();

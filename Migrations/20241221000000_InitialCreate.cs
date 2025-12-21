@@ -1,33 +1,38 @@
+using System;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using QL_HethongDiennuoc.Data;
 
 #nullable disable
 
 namespace QL_HethongDiennuoc.Migrations
 {
-    [DbContext(typeof(QL_HethongDiennuoc.Data.ApplicationDbContext))]
-    [Migration("20241219000000_InitialCreate")]
-    partial class InitialCreate : Migration
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20241221000000_InitialCreate")]
+    public partial class InitialCreate : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Customers",
+                name: "Tariffs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    FullName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    IdentityCard = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    ServiceType = table.Column<int>(type: "int", nullable: false),
+                    Tier = table.Column<int>(type: "int", nullable: false),
+                    MinKwh = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    MaxKwh = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    PricePerUnit = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    EffectiveDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Customers", x => x.Id);
+                    table.PrimaryKey("PK_Tariffs", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -51,23 +56,29 @@ namespace QL_HethongDiennuoc.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Tariffs",
+                name: "Customers",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ServiceType = table.Column<int>(type: "int", nullable: false),
-                    Tier = table.Column<int>(type: "int", nullable: false),
-                    MinKwh = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    MaxKwh = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    PricePerUnit = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    EffectiveDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Address = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    IdentityCard = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true)
+                    UserId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tariffs", x => x.Id);
+                    table.PrimaryKey("PK_Customers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Customers_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -79,7 +90,7 @@ namespace QL_HethongDiennuoc.Migrations
                     MeterNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Type = table.Column<int>(type: "int", nullable: false),
                     InstallDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Location = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Location = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     CustomerId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -104,7 +115,7 @@ namespace QL_HethongDiennuoc.Migrations
                     Status = table.Column<int>(type: "int", nullable: false),
                     SuspendDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     RestoreDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Reason = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Reason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     CustomerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -128,7 +139,7 @@ namespace QL_HethongDiennuoc.Migrations
                     PreviousReading = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CurrentReading = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Consumption = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Notes = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     MeterId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -155,8 +166,8 @@ namespace QL_HethongDiennuoc.Migrations
                     Status = table.Column<int>(type: "int", nullable: false),
                     PaidAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    ReadingId = table.Column<int>(type: "int", nullable: false),
-                    CustomerId = table.Column<int>(type: "int", nullable: false)
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    ReadingId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -185,7 +196,7 @@ namespace QL_HethongDiennuoc.Migrations
                     Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Method = table.Column<int>(type: "int", nullable: false),
                     TransactionId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    Notes = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     BillId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -211,6 +222,11 @@ namespace QL_HethongDiennuoc.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Customers_UserId",
+                table: "Customers",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Meters_CustomerId",
                 table: "Meters",
                 column: "CustomerId");
@@ -231,16 +247,17 @@ namespace QL_HethongDiennuoc.Migrations
                 column: "CustomerId");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(name: "Payments");
+            migrationBuilder.DropTable(name: "Services");
+            migrationBuilder.DropTable(name: "Tariffs");
             migrationBuilder.DropTable(name: "Bills");
             migrationBuilder.DropTable(name: "Readings");
             migrationBuilder.DropTable(name: "Meters");
-            migrationBuilder.DropTable(name: "Services");
             migrationBuilder.DropTable(name: "Customers");
             migrationBuilder.DropTable(name: "Users");
-            migrationBuilder.DropTable(name: "Tariffs");
         }
     }
 }

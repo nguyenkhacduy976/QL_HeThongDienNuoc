@@ -59,5 +59,11 @@ public class ApplicationDbContext : DbContext
             .WithMany(c => c.Services)
             .HasForeignKey(s => s.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Customer>()
+            .HasOne(c => c.User)
+            .WithOne()
+            .HasForeignKey<Customer>(c => c.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
