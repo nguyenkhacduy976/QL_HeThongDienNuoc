@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Quản lý Điện Nước</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #7c3aed;
+            --sidebar-width: 260px;
+            --topbar-height: 70px;
+            --bg-light: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+        
+        body { 
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            background: white;
+            height: var(--topbar-height);
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 1.5rem;
+            z-index: 1030;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary) !important;
+            font-size: 1.4rem;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-brand i {
+            margin-right: 8px;
+            background: var(--primary);
+            color: white;
+            padding: 6px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: var(--topbar-height);
+            bottom: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding-top: 2rem;
+            transition: all 0.3s ease;
+            z-index: 1020;
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 2rem;
+        }
+
+        .user-profile {
+            background: #f1f5f9;
+            padding: 1.2rem;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.2rem;
+            color: var(--text-main);
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar .nav-link {
+            color: var(--text-muted);
+            padding: 0.8rem 1.5rem;
+            margin: 0.2rem 1rem;
+            border-radius: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 12px;
+            font-size: 1.2rem;
+            transition: transform 0.2s ease;
+        }
+
+        .sidebar .nav-link:hover {
+            color: var(--primary);
+            background-color: #f1f5f9;
+        }
+
+        .sidebar .nav-link:hover i {
+            transform: scale(1.1);
+        }
+
+        .sidebar .nav-link.active {
+            color: white;
+            background: var(--primary);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            flex: 1;
+            min-height: 100vh;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            background: white;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            border: 1px solid #f1f5f9;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-info h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .stat-info span {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .btn {
+            border-radius: 10px;
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+
+        @@media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-lightning-charge-fill"></i> QL Điện Nước
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                <div class="dropdown">
+                    <button class="btn btn-link dropdown-toggle text-dark text-decoration-none d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                        <img src="https://ui-avatars.com/api/?name=@(User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? "User")&background=4f46e5&color=fff" class="rounded-circle" width="32" height="32" alt="Avatar">
+                        <span class="d-none d-md-inline">@User.Identity?.Name</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <li><h6 class="dropdown-header">Hệ thống Quản lý</h6></li>
+                        <li><a class="dropdown-item" asp-controller="Auth" asp-action="Logout"><i class="bi bi-box-arrow-right me-2"></i> Đăng xuất</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="d-flex" style="padding-top: var(--topbar-height);">
+            <!-- Sidebar -->
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <div class="user-profile">
+                        <div class="user-name">@User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</div>
+                        <div class="user-role">@User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value</div>
+                        <a asp-controller="Auth" asp-action="Logout" class="btn btn-sm btn-outline-danger mt-3 w-100 border-0">
+                            <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="nav flex-column mt-2">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-grid-1x2"></i> Tổng quan
+                    </a>
+                    
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Customers" ? "active" : "")" asp-controller="Customers" asp-action="Index">
+                            <i class="bi bi-people"></i> Khách hàng
+                        </a>
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Meters" ? "active" : "")" asp-controller="Meters" asp-action="Index">
+                            <i class="bi bi-speedometer"></i> Công tơ
+                        </a>
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Readings" ? "active" : "")" asp-controller="Readings" asp-action="Index">
+                            <i class="bi bi-clipboard-pulse"></i> Chỉ số điện nước
+                        </a>
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bills" ? "active" : "")" asp-controller="Bills" asp-action="Index">
+                            <i class="bi bi-receipt"></i> Hóa đơn
+                        </a>
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "active" : "")" asp-controller="Reports" asp-action="Index">
+                            <i class="bi bi-bar-chart"></i> Báo cáo
+                        </a>
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Auth" && ViewContext.RouteData.Values["Action"]?.ToString() == "Register" ? "active" : "")" asp-controller="Auth" asp-action="Register">
+                            <i class="bi bi-person-plus"></i> Tài khoản
+                        </a>
+                    }
+                    
+                    @if (User.IsInRole("Staff"))
+                    {
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Readings" ? "active" : "")" asp-controller="Readings" asp-action="Index">
+                            <i class="bi bi-clipboard-pulse"></i> Ghi chỉ số
+                        </a>
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Bills" ? "active" : "")" asp-controller="Bills" asp-action="Index">
+                            <i class="bi bi-receipt"></i> Hóa đơn
+                        </a>
+                    }
+                    
+                    @if (User.IsInRole("Customer"))
+                    {
+                        <a class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "MyBills" ? "active" : "")" asp-controller="Bills" asp-action="MyBills">
+                            <i class="bi bi-wallet2"></i> Hóa đơn của tôi
+                        </a>
+                        <a class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "PaymentHistory" ? "active" : "")" asp-controller="Bills" asp-action="PaymentHistory">
+                            <i class="bi bi-clock-history"></i> Lịch sử
+                        </a>
+                    }
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <div class="container-fluid">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4">
+                            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    
+                    @RenderBody()
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

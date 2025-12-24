@@ -1,0 +1,110 @@
+@using QL_HethongDiennuoc.Models.DTOs
+@model List<MeterDto>
+
+@{
+    ViewData["Title"] = "Quản lý Công tơ";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-speedometer"></i> Quản lý Công tơ</h2>
+    <a asp-controller="Meters" asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Thêm công tơ
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Số công tơ</th>
+                        <th>Loại</th>
+                        <th>Khách hàng</th>
+                        <th>Vị trí</th>
+                        <th>Ngày lắp đặt</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var meter in Model)
+                    {
+                        <tr>
+                            <td>@meter.Id</td>
+                            <td><strong>@meter.MeterNumber</strong></td>
+                            <td>
+                                @if (meter.Type == "Electric")
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-lightning-charge"></i> Điện
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-droplet"></i> Nước
+                                    </span>
+                                }
+                            </td>
+                            <td>@(meter.CustomerName ?? "N/A")</td>
+                            <td>@(meter.Location ?? "N/A")</td>
+                            <td>@meter.InstallDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (meter.IsActive)
+                                {
+                                    <span class="badge bg-success">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Ngừng</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-controller="Meters" asp-action="Edit" asp-route-id="@meter.Id" class="btn btn-outline-warning" title="Sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@meter.Id" method="post" style="display:inline;" onsubmit="return confirm('Bạn có chắc muốn xóa công tơ này?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-danger" title="Xóa">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-speedometer display-1 text-muted"></i>
+                <p class="text-muted mt-3">Chưa có công tơ nào</p>
+                <a asp-controller="Meters" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Thêm công tơ đầu tiên
+                </a>
+            </div>
+        }
+    </div>
+</div>

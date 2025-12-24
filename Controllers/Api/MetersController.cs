@@ -6,13 +6,13 @@ using QL_HethongDiennuoc.Services.Interfaces;
 namespace QL_HethongDiennuoc.Controllers.Api;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/meters")]
 [Authorize]
-public class MetersController : ControllerBase
+public class ApiMetersController : ControllerBase
 {
     private readonly IMeterService _meterService;
 
-    public MetersController(IMeterService meterService)
+    public ApiMetersController(IMeterService meterService)
     {
         _meterService = meterService;
     }

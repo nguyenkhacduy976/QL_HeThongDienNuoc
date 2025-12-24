@@ -22,6 +22,9 @@ builder.Services.AddRazorPages();
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
 
+// HttpClient
+builder.Services.AddHttpClient();
+
 // Session
 builder.Services.AddSession(options =>
 {
@@ -124,7 +127,7 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Database seeding
+// Database setup - creates if not exists, preserves data
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
