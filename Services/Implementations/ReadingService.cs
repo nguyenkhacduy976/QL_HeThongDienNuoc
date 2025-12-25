@@ -58,11 +58,12 @@ public class ReadingService : IReadingService
             .OrderByDescending(r => r.ReadingDate)
             .FirstOrDefaultAsync();
 
-        decimal previousValue = previousReading?.CurrentReading ?? 0;
+        // Use previous reading if exists, otherwise use meter's initial reading
+        decimal previousValue = previousReading?.CurrentReading ?? meter.InitialReading;
 
         // Validate
         if (dto.CurrentReading < previousValue)
-            throw new Exception("Current reading cannot be less than previous reading");
+            throw new Exception($"Chỉ số mới ({dto.CurrentReading}) không được nhỏ hơn chỉ số cũ ({previousValue})");
 
         // Create reading
         var reading = new Reading

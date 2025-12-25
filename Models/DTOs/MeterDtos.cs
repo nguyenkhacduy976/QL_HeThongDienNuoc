@@ -6,6 +6,7 @@ public class MeterDto
     public string MeterNumber { get; set; } = string.Empty;
     public string Type { get; set; } = string.Empty;
     public DateTime InstallDate { get; set; }
+    public decimal InitialReading { get; set; }
     public string? Location { get; set; }
     public bool IsActive { get; set; }
     public int CustomerId { get; set; }
@@ -17,6 +18,7 @@ public class CreateMeterDto
     public string MeterNumber { get; set; } = string.Empty;
     public int Type { get; set; } // 1=Electric, 2=Water
     public DateTime? InstallDate { get; set; }
+    public decimal InitialReading { get; set; } = 0;
     public string? Location { get; set; }
     public int CustomerId { get; set; }
 }
@@ -24,6 +26,7 @@ public class CreateMeterDto
 public class UpdateMeterDto
 {
     public string? MeterNumber { get; set; }
+    public decimal? InitialReading { get; set; }
     public string? Location { get; set; }
     public bool? IsActive { get; set; }
 }

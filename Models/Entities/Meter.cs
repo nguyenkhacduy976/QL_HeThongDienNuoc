@@ -23,6 +23,8 @@ public class Meter
 
     public DateTime InstallDate { get; set; } = DateTime.Now;
 
+    public decimal InitialReading { get; set; } = 0;
+
     [StringLength(100)]
     public string? Location { get; set; }
 
