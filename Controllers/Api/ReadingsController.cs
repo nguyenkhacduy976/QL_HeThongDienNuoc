@@ -6,13 +6,13 @@ using QL_HethongDiennuoc.Services.Interfaces;
 namespace QL_HethongDiennuoc.Controllers.Api;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/readings")]
 [Authorize]
-public class ReadingsController : ControllerBase
+public class ApiReadingsController : ControllerBase
 {
     private readonly IReadingService _readingService;
 
-    public ReadingsController(IReadingService readingService)
+    public ApiReadingsController(IReadingService readingService)
     {
         _readingService = readingService;
     }

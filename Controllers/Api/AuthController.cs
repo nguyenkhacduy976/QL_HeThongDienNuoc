@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QL_HethongDiennuoc.Models.DTOs;
@@ -34,7 +35,7 @@ public class ApiAuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
         try
@@ -49,7 +50,7 @@ public class ApiAuthController : ControllerBase
     }
 
     [HttpPost("change-password")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
     {
         try

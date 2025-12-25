@@ -7,13 +7,13 @@ using QL_HethongDiennuoc.Services.Interfaces;
 namespace QL_HethongDiennuoc.Controllers.Api;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/bills")]
 [Authorize]
-public class BillsController : ControllerBase
+public class ApiBillsController : ControllerBase
 {
     private readonly IBillingService _billingService;
 
-    public BillsController(IBillingService billingService)
+    public ApiBillsController(IBillingService billingService)
     {
         _billingService = billingService;
     }
