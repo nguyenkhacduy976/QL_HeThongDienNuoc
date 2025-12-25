@@ -1,0 +1,111 @@
+@using QL_HethongDiennuoc.Models.DTOs
+@model List<BillDto>
+
+@{
+    ViewData["Title"] = "Quản lý Hóa đơn";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-receipt"></i> Quản lý Hóa đơn</h2>
+    <a asp-controller="Bills" asp-action="Generate" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Tạo hóa đơn
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Số HĐ</th>
+                        <th>Khách hàng</th>
+                        <th>Loại DV</th>
+                        <th>Tiêu thụ</th>
+                        <th>Số tiền</th>
+                        <th>Đã thanh toán</th>
+                        <th>Ngày phát hành</th>
+                        <th>Hạn TT</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var bill in Model)
+                    {
+                        <tr>
+                            <td><strong>@bill.BillNumber</strong></td>
+                            <td>@bill.CustomerName</td>
+                            <td>
+                                @if (bill.ServiceType == "Electric")
+                                {
+                                    <span class="badge bg-warning text-dark">Điện</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info">Nước</span>
+                                }
+                            </td>
+                            <td>@bill.Consumption.ToString("N0") @(bill.ServiceType == "Electric" ? "kWh" : "m³")</td>
+                            <td class="fw-bold">@bill.Amount.ToString("N0") đ</td>
+                            <td>@bill.PaidAmount.ToString("N0") đ</td>
+                            <td>@bill.IssueDate.ToString("dd/MM/yyyy")</td>
+                            <td>@bill.DueDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (bill.Status == "Paid")
+                                {
+                                    <span class="badge bg-success">Đã TT</span>
+                                }
+                                else if (bill.DueDate < DateTime.Now)
+                                {
+                                    <span class="badge bg-danger">Quá hạn</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">Chưa TT</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Details" asp-route-id="@bill.Id" class="btn btn-outline-primary" title="Chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="/api/bills/@bill.Id/pdf" class="btn btn-outline-success" target="_blank" title="Tải PDF">
+                                        <i class="bi bi-file-pdf"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-receipt display-1 text-muted"></i>
+                <p class="text-muted mt-3">Chưa có hóa đơn nào</p>
+                <a asp-controller="Bills" asp-action="Generate" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Tạo hóa đơn đầu tiên
+                </a>
+            </div>
+        }
+    </div>
+</div>

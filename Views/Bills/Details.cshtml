@@ -1,0 +1,228 @@
+@using QL_HethongDiennuoc.Models.Entities
+@using QL_HethongDiennuoc.Helpers
+@model Bill
+
+@{
+    ViewData["Title"] = "Chi tiết Hóa đơn";
+    var breakdown = ViewBag.TierBreakdown as List<TierBreakdown>;
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-receipt"></i> Chi tiết Hóa đơn</h2>
+        <div>
+            <a href="/api/bills/@Model.Id/pdf" class="btn btn-success" target="_blank">
+                <i class="bi bi-file-pdf"></i> Tải PDF
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Bill Info -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-file-text"></i> Thông tin Hóa đơn</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%">Số hóa đơn:</th>
+                            <td><strong class="text-primary">@Model.BillNumber</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Ngày phát hành:</th>
+                            <td>@Model.IssueDate.ToString("dd/MM/yyyy")</td>
+                        </tr>
+                        <tr>
+                            <th>Hạn thanh toán:</th>
+                            <td>
+                                @Model.DueDate.ToString("dd/MM/yyyy")
+                                @if (Model.DueDate < DateTime.Now && Model.Status != BillStatus.Paid)
+                                {
+                                    <span class="badge bg-danger">Quá hạn</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Trạng thái:</th>
+                            <td>
+                                @if (Model.Status == BillStatus.Paid)
+                                {
+                                    <span class="badge bg-success fs-6">Đã thanh toán</span>
+                                }
+                                else if (Model.Status == BillStatus.Partial)
+                                {
+                                    <span class="badge bg-warning fs-6">Thanh toán một phần</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger fs-6">Chưa thanh toán</span>
+                                }
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Customer Info -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Thông tin Khách hàng</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%">Họ tên:</th>
+                            <td><strong>@Model.Customer.FullName</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Địa chỉ:</th>
+                            <td>@Model.Customer.Address</td>
+                        </tr>
+                        <tr>
+                            <th>Điện thoại:</th>
+                            <td>@(Model.Customer.PhoneNumber ?? "N/A")</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consumption Info -->
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-speedometer"></i> Chi tiết Tiêu thụ</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%">Loại dịch vụ:</th>
+                            <td>
+                                @if (Model.Reading.Meter.Type == MeterType.Electric)
+                                {
+                                    <span class="badge bg-warning text-dark fs-6"><i class="bi bi-lightning-charge"></i> Điện</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info fs-6"><i class="bi bi-droplet"></i> Nước</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Số công tơ:</th>
+                            <td><strong>@Model.Reading.Meter.MeterNumber</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Kỳ đọc:</th>
+                            <td>@Model.Reading.ReadingDate.ToString("dd/MM/yyyy")</td>
+                        </tr>
+                        <tr>
+                            <th>Chỉ số cũ:</th>
+                            <td>@Model.Reading.PreviousReading.ToString("N0")</td>
+                        </tr>
+                        <tr>
+                            <th>Chỉ số mới:</th>
+                            <td><strong class="text-primary">@Model.Reading.CurrentReading.ToString("N0")</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Tiêu thụ:</th>
+                            <td>
+                                <span class="badge bg-success fs-5">
+                                    @Model.Reading.Consumption.ToString("N0") @(Model.Reading.Meter.Type == MeterType.Electric ? "kWh" : "m³")
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tier Breakdown -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-calculator"></i> Bảng tính tiền theo Bậc thang</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Bậc</th>
+                            <th>Mô tả</th>
+                            <th class="text-end">Tiêu thụ</th>
+                            <th class="text-end">Đơn giá (VNĐ)</th>
+                            <th class="text-end">Thành tiền (VNĐ)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (breakdown != null)
+                        {
+                            @foreach (var tier in breakdown)
+                            {
+                                if (tier.Consumption > 0)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-secondary">Bậc @tier.Tier</span></td>
+                                        <td>@tier.Description</td>
+                                        <td class="text-end">@tier.Consumption.ToString("N2")</td>
+                                        <td class="text-end">@tier.PricePerUnit.ToString("N0")</td>
+                                        <td class="text-end fw-bold">@tier.Amount.ToString("N0")</td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+                    <tfoot class="table-warning">
+                        <tr>
+                            <td colspan="4" class="text-end fs-5"><strong>TỔNG CỘNG:</strong></td>
+                            <td class="text-end fs-4 text-danger"><strong>@Model.Amount.ToString("N0") VNĐ</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Info -->
+    <div class="card shadow">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="bi bi-cash"></i> Thanh toán</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center p-3 bg-light rounded">
+                        <h6 class="text-muted">Tổng tiền</h6>
+                        <h3 class="text-danger">@Model.Amount.ToString("N0") đ</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3 bg-light rounded">
+                        <h6 class="text-muted">Đã thanh toán</h6>
+                        <h3 class="text-success">@Model.PaidAmount.ToString("N0") đ</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-3 bg-light rounded">
+                        <h6 class="text-muted">Còn nợ</h6>
+                        <h3 class="text-warning">@((Model.Amount - Model.PaidAmount).ToString("N0")) đ</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
