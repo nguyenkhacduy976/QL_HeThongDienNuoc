@@ -66,6 +66,9 @@
                         <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "active" : "")" asp-controller="Reports" asp-action="Index">
                             <i class="bi bi-bar-chart"></i> Báo cáo
                         </a>
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "DebtManagement" ? "active" : "")" asp-controller="DebtManagement" asp-action="Index">
+                            <i class="bi bi-cash-coin"></i> Quản lý nợ
+                        </a>
                         <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Auth" && ViewContext.RouteData.Values["Action"]?.ToString() == "Register" ? "active" : "")" asp-controller="Auth" asp-action="Register">
                             <i class="bi bi-person-plus"></i> Tài khoản
                         </a>

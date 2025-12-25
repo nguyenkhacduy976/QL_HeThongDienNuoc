@@ -54,6 +54,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IServiceManagementService, ServiceManagementService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IDebtManagementService, DebtManagementService>();
+
 
 // Authentication: Cookie for MVC, JWT for API
 var jwtSettings = builder.Configuration.GetSection("Jwt");

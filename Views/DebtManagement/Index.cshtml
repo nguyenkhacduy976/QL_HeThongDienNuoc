@@ -1,0 +1,174 @@
+@model List<QL_HethongDiennuoc.Models.DTOs.DebtManagementDto>
+
+@{
+    ViewData["Title"] = "Quản lý Nợ và Dịch vụ";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-cash-coin"></i> Quản lý Nợ, Cắt/Khôi phục Dịch vụ</h2>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <!-- Filter Section -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <form method="get" class="d-flex gap-2">
+                    <select name="isServiceActive" class="form-select" onchange="this.form.submit()">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="true" selected="@(ViewBag.Filter == true)">Đang hoạt động</option>
+                        <option value="false" selected="@(ViewBag.Filter == false)">Đã cắt dịch vụ</option>
+                    </select>
+                </form>
+            </div>
+            <div class="col-md-6 text-end">
+                <span class="badge bg-danger fs-6">Tổng số KH nợ: @Model.Count</span>
+                <span class="badge bg-warning text-dark fs-6">Tổng nợ: @Model.Sum(m => m.TotalDebt).ToString("N0") VNĐ</span>
+            </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Họ và tên</th>
+                        <th>Điện thoại</th>
+                        <th>Địa chỉ</th>
+                        <th>Tổng nợ</th>
+                        <th>Số HĐ chưa TT</th>
+                        <th>HĐ cũ nhất</th>
+                        <th>Trạng thái DV</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var customer in Model)
+                        {
+                            <tr>
+                                <td>@customer.CustomerId</td>
+                                <td><strong>@customer.CustomerName</strong></td>
+                                <td>@customer.Phone</td>
+                                <td>@customer.Address</td>
+                                <td><span class="text-danger fw-bold">@customer.TotalDebt.ToString("N0") VNĐ</span></td>
+                                <td><span class="badge bg-warning text-dark">@customer.UnpaidBillsCount</span></td>
+                                <td>
+                                    @if (customer.OldestUnpaidBillDate.HasValue)
+                                    {
+                                        @customer.OldestUnpaidBillDate.Value.ToString("dd/MM/yyyy")
+                                    }
+                                    else
+                                    {
+                                        <span>N/A</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (customer.IsServiceActive)
+                                    {
+                                        <span class="badge bg-success">Đang hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Đã cắt</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (customer.IsServiceActive)
+                                    {
+                                        <button class="btn btn-sm btn-danger" onclick="confirmSuspend(@customer.CustomerId, '@Html.Raw(customer.CustomerName)')" title="Cắt dịch vụ">
+                                            <i class="bi bi-x-circle"></i> Cắt DV
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-success" onclick="confirmRestore(@customer.CustomerId, '@Html.Raw(customer.CustomerName)')" title="Khôi phục dịch vụ">
+                                            <i class="bi bi-check-circle"></i> Khôi phục
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                Không có khách hàng nợ tiền
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Suspend Service Modal -->
+<div class="modal fade" id="suspendModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-x-circle"></i> Xác nhận Cắt Dịch vụ</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn cắt dịch vụ của khách hàng <strong id="suspendCustomerName"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle"></i> Khách hàng sẽ không thể sử dụng dịch vụ điện nước!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="suspendForm" method="post" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-x-circle"></i> Cắt Dịch vụ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restore Service Modal -->
+<div class="modal fade" id="restoreModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-check-circle"></i> Xác nhận Khôi phục Dịch vụ</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn khôi phục dịch vụ cho khách hàng <strong id="restoreCustomerName"></strong>?</p>
+                <p class="text-success"><i class="bi bi-info-circle"></i> Khách hàng sẽ có thể sử dụng lại dịch vụ điện nước.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <form id="restoreForm" method="post" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Khôi phục</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function confirmSuspend(id, name) {
+    document.getElementById('suspendCustomerName').textContent = name;
+    document.getElementById('suspendForm').action = '/DebtManagement/SuspendService/' + id;
+    
+    var modal = new bootstrap.Modal(document.getElementById('suspendModal'));
+    modal.show();
+}
+
+function confirmRestore(id, name) {
+    document.getElementById('restoreCustomerName').textContent = name;
+    document.getElementById('restoreForm').action = '/DebtManagement/RestoreService/' + id;
+    
+    var modal = new bootstrap.Modal(document.getElementById('restoreModal'));
+    modal.show();
+}
+</script>
+}
