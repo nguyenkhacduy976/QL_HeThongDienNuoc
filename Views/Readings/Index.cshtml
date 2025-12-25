@@ -1,0 +1,82 @@
+@using QL_HethongDiennuoc.Models.DTOs
+@model List<ReadingDto>
+
+@{
+    ViewData["Title"] = "Ghi chỉ số điện nước";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-clipboard-data"></i> Chỉ số điện nước</h2>
+    <a asp-controller="Readings" asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Ghi chỉ số mới
+    </a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Ngày ghi</th>
+                        <th>Công tơ</th>
+                        <th>Chỉ số cũ</th>
+                        <th>Chỉ số mới</th>
+                        <th>Tiêu thụ</th>
+                        <th>Ghi chú</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var reading in Model)
+                    {
+                        <tr>
+                            <td>@reading.ReadingDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td><strong>@(reading.MeterNumber ?? "N/A")</strong></td>
+                            <td>@reading.PreviousReading.ToString("N0")</td>
+                            <td><strong class="text-primary">@reading.CurrentReading.ToString("N0")</strong></td>
+                            <td>
+                                <span class="badge bg-success fs-6">
+                                    @reading.Consumption.ToString("N0")
+                                </span>
+                            </td>
+                            <td>@(reading.Notes ?? "")</td>
+                            <td>
+                                <a asp-controller="Bills" asp-action="Generate" asp-route-readingId="@reading.Id" class="btn btn-sm btn-outline-success" title="Tạo hóa đơn">
+                                    <i class="bi bi-receipt"></i> Tạo HĐ
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-clipboard-data display-1 text-muted"></i>
+                <p class="text-muted mt-3">Chưa có chỉ số nào được ghi</p>
+                <a asp-controller="Readings" asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Ghi chỉ số đầu tiên
+                </a>
+            </div>
+        }
+    </div>
+</div>
