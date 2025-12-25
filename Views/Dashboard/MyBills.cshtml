@@ -1,0 +1,88 @@
+@model List<QL_HethongDiennuoc.Models.DTOs.BillDto>
+
+@{
+    ViewData["Title"] = "Hóa đơn của tôi";
+}
+
+<h2><i class="bi bi-receipt"></i> Hóa đơn của tôi</h2>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Số HĐ</th>
+                        <th>Loại dịch vụ</th>
+                        <th>Tiêu thụ</th>
+                        <th>Số tiền</th>
+                        <th>Đã TT</th>
+                        <th>Ngày phát hành</th>
+                        <th>Hạn TT</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var bill in Model)
+                    {
+                        <tr>
+                            <td><strong>@bill.BillNumber</strong></td>
+                            <td>
+                                @if (bill.ServiceType == "Electric")
+                                {
+                                    <span class="badge bg-warning">Điện</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info">Nước</span>
+                                }
+                            </td>
+                            <td>@bill.Consumption.ToString("N0") @(bill.ServiceType == "Electric" ? "kWh" : "m³")</td>
+                            <td class="fw-bold">@bill.Amount.ToString("N0") đ</td>
+                            <td>@bill.PaidAmount.ToString("N0") đ</td>
+                            <td>@bill.IssueDate.ToString("dd/MM/yyyy")</td>
+                            <td>@bill.DueDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (bill.Status == "Paid")
+                                {
+                                    <span class="badge bg-success">Đã TT</span>
+                                }
+                                else if (bill.DueDate < DateTime.Now)
+                                {
+                                    <span class="badge bg-danger">Quá hạn</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">Chưa TT</span>
+                                }
+                            </td>
+                            <td>
+                                <a href="/api/bills/@bill.Id/pdf" class="btn btn-sm btn-success" target="_blank" title="Tải PDF">
+                                    <i class="bi bi-file-pdf"></i>
+                                </a>
+                                @if (bill.Status != "Paid")
+                                {
+                                    <button class="btn btn-sm btn-primary" onclick="payBill(@bill.Id)" title="Thanh toán">
+                                        <i class="bi bi-cash-coin"></i>
+                                    </button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function payBill(billId) {
+    if (confirm('Bạn có chắc muốn thanh toán hóa đơn này?')) {
+        // Redirect to payment page
+        window.location.href = `/Customer/Pay/${billId}`;
+    }
+}
+</script>
+}

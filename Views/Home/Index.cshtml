@@ -1,0 +1,108 @@
+@{
+    ViewData["Title"] = "Tổng quan hệ thống";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold mb-0">Tổng quan hệ thống</h2>
+    <div class="text-muted">@DateTime.Now.ToString("dddd, dd MMMM yyyy")</div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-primary">
+                <i class="bi bi-people"></i>
+            </div>
+            <div class="stat-info">
+                <span>Khách hàng</span>
+                <h3>@ViewBag.TotalCustomers</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-success">
+                <i class="bi bi-speedometer"></i>
+            </div>
+            <div class="stat-info">
+                <span>Công tơ</span>
+                <h3>@ViewBag.TotalMeters</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-warning text-white">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <div class="stat-info">
+                <span>HĐ chờ</span>
+                <h3>@ViewBag.PendingBills</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon bg-danger">
+                <i class="bi bi-currency-dollar"></i>
+            </div>
+            <div class="stat-info">
+                <span>Doanh thu</span>
+                <h3>@(((decimal?)ViewBag.MonthlyRevenue ?? 0).ToString("N0"))</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 border-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-primary">Hóa đơn gần đây</h5>
+            <a asp-controller="Bills" asp-action="Index" class="btn btn-sm btn-link text-decoration-none">Xem tất cả</a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">Số HĐ</th>
+                        <th>Khách hàng</th>
+                        <th>Số tiền</th>
+                        <th class="pe-4">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (ViewBag.RecentBills != null)
+                    {
+                        @foreach (var bill in (List<QL_HethongDiennuoc.Models.DTOs.BillDto>)ViewBag.RecentBills)
+                        {
+                            <tr>
+                                <td class="ps-4"><span class="fw-bold text-primary">#@bill.BillNumber</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-light rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                            @bill.CustomerName.Substring(0, 1)
+                                        </div>
+                                        @bill.CustomerName
+                                    </div>
+                                </td>
+                                <td>@(bill.Amount.ToString("N0")) đ</td>
+                                <td class="pe-4">
+                                    @if (bill.Status == "Paid")
+                                    {
+                                        <span class="badge rounded-pill bg-success-subtle text-success px-3 pb-2 pt-2">Đã thanh toán</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill bg-warning-subtle text-warning px-3 pb-2 pt-2">Chưa thanh toán</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
