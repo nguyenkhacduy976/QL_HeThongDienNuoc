@@ -1,0 +1,141 @@
+@model QL_HethongDiennuoc.Models.DTOs.ConsumptionReportDto
+@{
+    ViewData["Title"] = "Báo cáo tiêu thụ";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-bar-chart-line"></i> Báo cáo tiêu thụ điện nước</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Quay lại
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <i class="bi bi-funnel"></i> Bộ lọc
+    </div>
+    <div class="card-body">
+        <form method="get" asp-action="Consumption">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Từ ngày</label>
+                    <input type="date" name="startDate" class="form-control" value="@Model?.StartDate?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Đến ngày</label>
+                    <input type="date" name="endDate" class="form-control" value="@Model?.EndDate?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Khách hàng</label>
+                    <select name="customerId" class="form-select">
+                        <option value="">-- Tất cả khách hàng --</option>
+                        @foreach (var customer in ViewBag.Customers)
+                        {
+                            <option value="@customer.Value" selected="@(customer.Value == Model?.CustomerId?.ToString())">
+                                @customer.Text
+                            </option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Lọc
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model != null && Model.Items.Any())
+{
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <i class="bi bi-lightning-charge fs-1 text-primary"></i>
+                    <h3 class="mt-2 text-primary">@Model.TotalElectricConsumption.ToString("N2") kWh</h3>
+                    <p class="text-muted mb-0">Tổng tiêu thụ điện</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <i class="bi bi-droplet fs-1 text-info"></i>
+                    <h3 class="mt-2 text-info">@Model.TotalWaterConsumption.ToString("N2") m³</h3>
+                    <p class="text-muted mb-0">Tổng tiêu thụ nước</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Chi tiết tiêu thụ (@Model.Items.Count bản ghi)</h5>
+            <button class="btn btn-sm btn-success">
+                <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>STT</th>
+                            <th>Khách hàng</th>
+                            <th>Số công tơ</th>
+                            <th>Loại dịch vụ</th>
+                            <th>Tiêu thụ</th>
+                            <th>Ngày ghi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{int index = 1;}
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@item.CustomerName</td>
+                                <td><code>@item.MeterNumber</code></td>
+                                <td>
+                                    @if (item.ServiceType == "Electric")
+                                    {
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-lightning-charge"></i> Điện
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-droplet"></i> Nước
+                                        </span>
+                                    }
+                                </td>
+                                <td class="fw-bold">
+                                    @item.Consumption.ToString("N2")
+                                    @if (item.ServiceType == "Electric")
+                                    {
+                                        <small class="text-muted">kWh</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">m³</small>
+                                    }
+                                </td>
+                                <td>@item.ReadingDate.ToString("dd/MM/yyyy")</td>
+                            </tr>
+                            index++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Không có dữ liệu. Vui lòng chọn bộ lọc và nhấn "Lọc".
+    </div>
+}

@@ -103,7 +103,8 @@ public class ReportService : IReportService
     {
         var today = DateTime.Now;
 
-        var outstandingBills = await _context.Bills
+        // First, get the bills without calculating DaysOverdue in SQL
+        var bills = await _context.Bills
             .Include(b => b.Customer)
             .Where(b => b.Status != BillStatus.Paid && b.DueDate < today)
             .Select(b => new OutstandingBillDto
@@ -119,11 +120,16 @@ public class ReportService : IReportService
                 OutstandingAmount = b.Amount - b.PaidAmount,
                 IssueDate = b.IssueDate,
                 DueDate = b.DueDate,
-                DaysOverdue = (int)(today - b.DueDate).TotalDays
+                DaysOverdue = 0 // Will be calculated below
             })
-            .OrderByDescending(b => b.DaysOverdue)
             .ToListAsync();
 
-        return outstandingBills;
+        // Calculate DaysOverdue client-side and sort
+        foreach (var bill in bills)
+        {
+            bill.DaysOverdue = (int)(today - bill.DueDate).TotalDays;
+        }
+
+        return bills.OrderByDescending(b => b.DaysOverdue).ToList();
     }
 }

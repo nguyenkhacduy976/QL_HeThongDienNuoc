@@ -1,0 +1,140 @@
+@model List<QL_HethongDiennuoc.Models.DTOs.OutstandingBillDto>
+@{
+    ViewData["Title"] = "Công nợ quá hạn";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-exclamation-triangle text-danger"></i> Công nợ quá hạn</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Quay lại
+    </a>
+</div>
+
+@if (Model != null && Model.Any())
+{
+    var totalOutstanding = Model.Sum(b => b.OutstandingAmount);
+    
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-danger">
+                <div class="card-body text-center">
+                    <i class="bi bi-exclamation-circle fs-1 text-danger"></i>
+                    <h3 class="mt-2 text-danger">@Model.Count</h3>
+                    <p class="text-muted mb-0">Tổng số hóa đơn quá hạn</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <i class="bi bi-cash-stack fs-1 text-warning"></i>
+                    <h4 class="mt-2 text-warning">@totalOutstanding.ToString("N0") đ</h4>
+                    <p class="text-muted mb-0">Tổng công nợ</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-x fs-1 text-info"></i>
+                    <h3 class="mt-2 text-info">@Model.Max(b => b.DaysOverdue)</h3>
+                    <p class="text-muted mb-0">Quá hạn lâu nhất (ngày)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Danh sách hóa đơn quá hạn</h5>
+            <div>
+                <button class="btn btn-sm btn-success me-2">
+                    <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+                </button>
+                <button class="btn btn-sm btn-warning">
+                    <i class="bi bi-envelope"></i> Gửi nhắc nợ hàng loạt
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>STT</th>
+                            <th>Số hóa đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Liên hệ</th>
+                            <th>Tổng tiền</th>
+                            <th>Đã trả</th>
+                            <th>Còn nợ</th>
+                            <th>Hạn thanh toán</th>
+                            <th>Quá hạn</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{int index = 1;}
+                        @foreach (var bill in Model.OrderByDescending(b => b.DaysOverdue))
+                        {
+                            var urgencyClass = bill.DaysOverdue > 30 ? "table-danger" : bill.DaysOverdue > 15 ? "table-warning" : "";
+                            <tr class="@urgencyClass">
+                                <td>@index</td>
+                                <td><code>@bill.BillNumber</code></td>
+                                <td>
+                                    <strong>@bill.CustomerName</strong>
+                                    <br />
+                                    <small class="text-muted">ID: @bill.CustomerId</small>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(bill.PhoneNumber))
+                                    {
+                                        <div><i class="bi bi-telephone"></i> @bill.PhoneNumber</div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(bill.Email))
+                                    {
+                                        <div><i class="bi bi-envelope"></i> @bill.Email</div>
+                                    }
+                                </td>
+                                <td>@bill.Amount.ToString("N0") đ</td>
+                                <td class="text-success">@bill.PaidAmount.ToString("N0") đ</td>
+                                <td class="fw-bold text-danger">@bill.OutstandingAmount.ToString("N0") đ</td>
+                                <td>@bill.DueDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="badge @(bill.DaysOverdue > 30 ? "bg-danger" : bill.DaysOverdue > 15 ? "bg-warning" : "bg-secondary")">
+                                        @bill.DaysOverdue ngày
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-controller="Bills" asp-action="Details" asp-route-id="@bill.BillId" 
+                                           class="btn btn-outline-primary" title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <button class="btn btn-outline-warning" title="Gửi nhắc nợ">
+                                            <i class="bi bi-bell"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            index++;
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="6" class="text-end"><strong>Tổng cộng:</strong></td>
+                            <td class="fw-bold text-danger">@totalOutstanding.ToString("N0") đ</td>
+                            <td colspan="3"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i> <strong>Tuyệt vời!</strong> Hiện tại không có hóa đơn quá hạn nào.
+    </div>
+}
