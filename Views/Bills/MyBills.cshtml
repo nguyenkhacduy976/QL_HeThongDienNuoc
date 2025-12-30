@@ -5,68 +5,223 @@
     ViewData["Title"] = "Hóa đơn của tôi";
 }
 
-<h2><i class="bi bi-receipt"></i> Hóa đơn của tôi</h2>
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="bi bi-file-text"></i> Hóa đơn của tôi</h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")">Tổng quan</a></li>
+                    <li class="breadcrumb-item active">Hóa đơn của tôi</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
 
-<div class="card mt-4">
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Số HĐ</th>
-                        <th>Loại dịch vụ</th>
-                        <th>Tiêu thụ</th>
-                        <th>Số tiền</th>
-                        <th>Đã TT</th>
-                        <th>Ngày phát hành</th>
-                        <th>Hạn TT</th>
-                        <th>Trạng thái</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var bill in Model)
-                    {
-                        <tr>
-                            <td><strong>@bill.BillNumber</strong></td>
-                            <td>
-                                @if (bill.ServiceType == "Electric")
-                                {
-                                    <span class="badge bg-warning">Điện</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-info">Nước</span>
-                                }
-                            </td>
-                            <td>@bill.Consumption.ToString("N0") @(bill.ServiceType == "Electric" ? "kWh" : "m³")</td>
-                            <td class="fw-bold">@bill.Amount.ToString("N0") đ</td>
-                            <td>@bill.PaidAmount.ToString("N0") đ</td>
-                            <td>@bill.IssueDate.ToString("dd/MM/yyyy")</td>
-                            <td>@bill.DueDate.ToString("dd/MM/yyyy")</td>
-                            <td>
-                                @if (bill.Status == "Paid")
-                                {
-                                    <span class="badge bg-success">Đã TT</span>
-                                }
-                                else if (bill.DueDate < DateTime.Now)
-                                {
-                                    <span class="badge bg-danger">Quá hạn</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning">Chưa TT</span>
-                                }
-                            </td>
-                            <td>
-                                <a href="/api/bills/@bill.Id/pdf" class="btn btn-sm btn-success" target="_blank" title="Tải PDF">
-                                    <i class="bi bi-file-pdf"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Số HĐ</th>
+                                <th>Loại DV</th>
+                                <th>Ngày phát hành</th>
+                                <th>Hạn thanh toán</th>
+                                <th>Tiêu thụ</th>
+                                <th>Số tiền</th>
+                                <th>Đã thanh toán</th>
+                                <th>Còn lại</th>
+                                <th>Trạng thái</th>
+                                <th>PDF</th>
+                                <th>Thanh toán</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var bill in Model)
+                            {
+                                var remaining = bill.Amount - bill.PaidAmount;
+                                <tr>
+                                    <td><strong>@bill.BillNumber</strong></td>
+                                    <td>
+                                        @if (bill.ServiceType == "Electric")
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-lightning-fill"></i> Điện</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info"><i class="bi bi-droplet-fill"></i> Nước</span>
+                                        }
+                                    </td>
+                                    <td>@bill.IssueDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@bill.DueDate.ToString("dd/MM/yyyy")</td>
+                                    <td>@bill.Consumption.ToString("N0") @(bill.ServiceType == "Electric" ? "kWh" : "m³")</td>
+                                    <td class="fw-bold">@bill.Amount.ToString("N0") đ</td>
+                                    <td class="text-success">@bill.PaidAmount.ToString("N0") đ</td>
+                                    <td class="fw-bold @(remaining > 0 ? "text-danger" : "text-success")">@remaining.ToString("N0") đ</td>
+                                    <td>
+                                        @if (bill.Status == "Paid")
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Đã thanh toán</span>
+                                        }
+                                        else if (bill.DueDate < DateTime.Now)
+                                        {
+                                            <span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill"></i> Quá hạn</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-clock-fill"></i> Chưa thanh toán</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a href="/api/bills/@bill.Id/pdf" class="btn btn-sm btn-success" target="_blank" title="Tải PDF">
+                                            <i class="bi bi-file-pdf"></i>
+                                        </a>
+                                    </td>
+                                    <td>
+                                        @if (bill.Status != "Paid" && remaining > 0)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-primary pay-bill-btn" 
+                                                    data-bill-id="@bill.Id" 
+                                                    data-bill-number="@bill.BillNumber"
+                                                    data-amount="@remaining">
+                                                <i class="bi bi-credit-card"></i> Thanh toán
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success"><i class="bi bi-check-circle"></i></span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <p class="mt-3 text-muted">Chưa có hóa đơn nào</p>
+                </div>
+            }
         </div>
     </div>
 </div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-credit-card"></i> Thanh toán hóa đơn</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="paymentForm">
+                <div class="modal-body">
+                    <input type="hidden" id="payBillId" name="billId" />
+                    
+                    <div class="alert alert-info">
+                        <strong>Số hóa đơn:</strong> <span id="payBillNumber"></span><br/>
+                        <strong>Số tiền:</strong> <span id="payAmount"></span> đ
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-wallet2"></i> Phương thức thanh toán</label>
+                        <select class="form-select" id="paymentMethod" name="paymentMethod" required>
+                            <option value="">-- Chọn phương thức --</option>
+                            <option value="1">💵 Tiền mặt</option>
+                            <option value="2">🏦 Chuyển khoản ngân hàng</option>
+                            <option value="3">💳 Thẻ tín dụng/Ghi nợ</option>
+                            <option value="4">📱 Ví MoMo</option>
+                            <option value="5">🔄 Khác</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle"></i> Đây là thanh toán giả định. Trong thực tế sẽ kết nối với cổng thanh toán.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Xác nhận thanh toán
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Payment modal handling
+        document.querySelectorAll('.pay-bill-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const billId = this.getAttribute('data-bill-id');
+                const billNumber = this.getAttribute('data-bill-number');
+                const amount = parseFloat(this.getAttribute('data-amount'));
+
+                document.getElementById('payBillId').value = billId;
+                document.getElementById('payBillNumber').textContent = billNumber;
+                document.getElementById('payAmount').textContent = amount.toLocaleString('vi-VN');
+
+                const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+                modal.show();
+            });
+        });
+
+        // Payment form submission
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const billId = document.getElementById('payBillId').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+
+            if (!paymentMethod) {
+                alert('Vui lòng chọn phương thức thanh toán!');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('billId', billId);
+                formData.append('paymentMethod', paymentMethod);
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                const response = await fetch('@Url.Action("PayBill", "Dashboard")', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+                    
+                    // Show success message and reload
+                    alert(result.message);
+                    window.location.reload();
+                } else {
+                    alert('Lỗi: ' + result.message);
+                }
+            } catch (error) {
+                alert('Có lỗi xảy ra: ' + error.message);
+            }
+        });
+    </script>
+}

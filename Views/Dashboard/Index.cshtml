@@ -1,78 +1,364 @@
+@using QL_HethongDiennuoc.Models.DTOs
 @{
     ViewData["Title"] = "Dashboard - Khách hàng";
 }
 
-<h2><i class="bi bi-person-circle"></i> Thông tin tài khoản</h2>
+<style>
+.meter-info-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    color: white;
+    height: 100%;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    transition: transform 0.3s ease;
+}
 
+.meter-info-card:hover {
+    transform: translateY(-5px);
+}
+
+.meter-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    color: white;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card h3 {
+    color: white !important;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-top: 1rem;
+}
+</style>
+
+<h2><i class="bi bi-person-circle"></i> Xin chào, @ViewBag.CustomerName</h2>
+
+<!-- Stats Cards -->
 <div class="row g-3 mb-4 mt-3">
     <div class="col-md-4">
-        <div class="stat-card">
+        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <h6 class="text-white-50">Tổng hóa đơn</h6>
+            <h3>@ViewBag.TotalBills</h3>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
             <h6 class="text-white-50">Hóa đơn chưa thanh toán</h6>
             <h3>@ViewBag.UnpaidBills</h3>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
             <h6 class="text-white-50">Tổng công nợ</h6>
             <h3>@(((decimal)ViewBag.TotalDebt).ToString("N0")) đ</h3>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-            <h6 class="text-white-50">Tình trạng</h6>
-            <h3>@(ViewBag.UnpaidBills > 0 ? "Còn nợ" : "Đã thanh toán")</h3>
-        </div>
-    </div>
 </div>
 
+<!-- Meter Information -->
+<div class="row g-3 mb-4">
+    @if (ViewBag.ElectricMeter != null)
+    {
+        var electricMeter = (MeterDto)ViewBag.ElectricMeter;
+        <div class="col-md-6">
+            <div class="meter-info-card" style="background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%);">
+                <div class="meter-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                <h5>Công tơ điện</h5>
+                <p class="mb-1"><strong>Số công tơ:</strong> @electricMeter.MeterNumber</p>
+                <p class="mb-1"><strong>Vị trí:</strong> @electricMeter.Location</p>
+                <p class="mb-0"><strong>Ngày lắp:</strong> @electricMeter.InstallDate.ToString("dd/MM/yyyy")</p>
+            </div>
+        </div>
+    }
+    
+    @if (ViewBag.WaterMeter != null)
+    {
+        var waterMeter = (MeterDto)ViewBag.WaterMeter;
+        <div class="col-md-6">
+            <div class="meter-info-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="meter-icon"><i class="bi bi-droplet-fill"></i></div>
+                <h5>Công tơ nước</h5>
+                <p class="mb-1"><strong>Số công tơ:</strong> @waterMeter.MeterNumber</p>
+                <p class="mb-1"><strong>Vị trí:</strong> @waterMeter.Location</p>
+                <p class="mb-0"><strong>Ngày lắp:</strong> @waterMeter.InstallDate.ToString("dd/MM/yyyy")</p>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Consumption Chart -->
+@if (((Dictionary<string, decimal>)ViewBag.MonthlyConsumption).Any())
+{
+    <div class="card mb-4">
+        <div class="card-header bg-transparent">
+            <h5><i class="bi bi-bar-chart-fill"></i> Biểu đồ tiêu thụ 6 tháng gần đây</h5>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="consumptionChart"></canvas>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Recent Bills -->
 <div class="card">
     <div class="card-header bg-transparent">
         <h5><i class="bi bi-receipt"></i> Hóa đơn gần đây</h5>
     </div>
     <div class="card-body">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Số HĐ</th>
-                    <th>Ngày phát hành</th>
-                    <th>Hạn thanh toán</th>
-                    <th>Số tiền</th>
-                    <th>Đã thanh toán</th>
-                    <th>Trạng thái</th>
-                    <th>PDF</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var bill in (List<QL_HethongDiennuoc.Models.DTOs.BillDto>)ViewBag.MyBills)
-                {
-                    <tr>
-                        <td><strong>@bill.BillNumber</strong></td>
-                        <td>@bill.IssueDate.ToString("dd/MM/yyyy")</td>
-                        <td>@bill.DueDate.ToString("dd/MM/yyyy")</td>
-                        <td class="fw-bold">@bill.Amount.ToString("N0") đ</td>
-                        <td>@bill.PaidAmount.ToString("N0") đ</td>
-                        <td>
-                            @if (bill.Status == "Paid")
-                            {
-                                <span class="badge bg-success">Đã thanh toán</span>
-                            }
-                            else if (bill.DueDate < DateTime.Now)
-                            {
-                                <span class="badge bg-danger">Quá hạn</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning">Chưa thanh toán</span>
-                            }
-                        </td>
-                        <td>
-                            <a href="/api/bills/@bill.Id/pdf" class="btn btn-sm btn-success" target="_blank">
-                                <i class="bi bi-file-pdf"></i>
-                            </a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        @if (((List<BillDto>)ViewBag.MyBills).Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Số HĐ</th>
+                            <th>Loại DV</th>
+                            <th>Ngày phát hành</th>
+                            <th>Hạn thanh toán</th>
+                            <th>Tiêu thụ</th>
+                            <th>Số tiền</th>
+                            <th>Trạng thái</th>
+                            <th>PDF</th>
+                            <th>Thanh toán</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var bill in (List<BillDto>)ViewBag.MyBills)
+                        {
+                            <tr>
+                                <td><strong>@bill.BillNumber</strong></td>
+                                <td>
+                                    @if (bill.ServiceType == "Electric")
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-lightning-fill"></i> Điện</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info"><i class="bi bi-droplet-fill"></i> Nước</span>
+                                    }
+                                </td>
+                                <td>@bill.IssueDate.ToString("dd/MM/yyyy")</td>
+                                <td>@bill.DueDate.ToString("dd/MM/yyyy")</td>
+                                <td>@bill.Consumption.ToString("N0") @(bill.ServiceType == "Electric" ? "kWh" : "m³")</td>
+                                <td class="fw-bold">@bill.Amount.ToString("N0") đ</td>
+                                <td>
+                                    @if (bill.Status == "Paid")
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Đã thanh toán</span>
+                                    }
+                                    else if (bill.DueDate < DateTime.Now)
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill"></i> Quá hạn</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-clock-fill"></i> Chưa thanh toán</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a href="/api/bills/@bill.Id/pdf" class="btn btn-sm btn-success" target="_blank" title="Tải PDF">
+                                        <i class="bi bi-file-pdf"></i>
+                                    </a>
+                                </td>
+                                <td>
+                                    @if (bill.Status != "Paid")
+                                    {
+                                        var remaining = bill.Amount - bill.PaidAmount;
+                                        <button type="button" class="btn btn-sm btn-primary pay-bill-btn" 
+                                                data-bill-id="@bill.Id" 
+                                                data-bill-number="@bill.BillNumber"
+                                                data-amount="@remaining">
+                                            <i class="bi bi-credit-card"></i> Thanh toán
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-success"><i class="bi bi-check-circle"></i></span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-center mt-3">
+                <a href="@Url.Action("MyBills", "Bills")" class="btn btn-primary">
+                    <i class="bi bi-eye"></i> Xem tất cả hóa đơn
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle"></i> Chưa có hóa đơn nào.
+            </div>
+        }
     </div>
 </div>
+
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-credit-card"></i> Thanh toán hóa đơn</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="paymentForm">
+                <div class="modal-body">
+                    <input type="hidden" id="payBillId" name="billId" />
+                    
+                    <div class="alert alert-info">
+                        <strong>Số hóa đơn:</strong> <span id="payBillNumber"></span><br/>
+                        <strong>Số tiền:</strong> <span id="payAmount"></span> đ
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-wallet2"></i> Phương thức thanh toán</label>
+                        <select class="form-select" id="paymentMethod" name="paymentMethod" required>
+                            <option value="">-- Chọn phương thức --</option>
+                            <option value="1">💵 Tiền mặt</option>
+                            <option value="2">🏦 Chuyển khoản ngân hàng</option>
+                            <option value="3">💳 Thẻ tín dụng/Ghi nợ</option>
+                            <option value="4">📱 Ví MoMo</option>
+                            <option value="5">🔄 Khác</option>
+                        </select>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle"></i> Đây là thanh toán giả định. Trong thực tế sẽ kết nối với cổng thanh toán.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Xác nhận thanh toán
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Consumption Chart
+        @if (((Dictionary<string, decimal>)ViewBag.MonthlyConsumption).Any())
+        {
+            var monthlyData = (Dictionary<string, decimal>)ViewBag.MonthlyConsumption;
+            <text>
+            const ctx = document.getElementById('consumptionChart');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthlyData.Keys)),
+                    datasets: [{
+                        label: 'Tiêu thụ (kWh/m³)',
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthlyData.Values)),
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            </text>
+        }
+
+        // Payment modal handling
+        document.querySelectorAll('.pay-bill-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const billId = this.getAttribute('data-bill-id');
+                const billNumber = this.getAttribute('data-bill-number');
+                const amount = parseFloat(this.getAttribute('data-amount'));
+
+                document.getElementById('payBillId').value = billId;
+                document.getElementById('payBillNumber').textContent = billNumber;
+                document.getElementById('payAmount').textContent = amount.toLocaleString('vi-VN');
+
+                const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+                modal.show();
+            });
+        });
+
+        // Payment form submission
+        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const billId = document.getElementById('payBillId').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+
+            if (!paymentMethod) {
+                alert('Vui lòng chọn phương thức thanh toán!');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('billId', billId);
+                formData.append('paymentMethod', paymentMethod);
+                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+
+                const response = await fetch('@Url.Action("PayBill", "Dashboard")', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+                    
+                    // Show success message and reload
+                    alert(result.message);
+                    window.location.reload();
+                } else {
+                    alert('Lỗi: ' + result.message);
+                }
+            } catch (error) {
+                alert('Có lỗi xảy ra: ' + error.message);
+            }
+        });
+    </script>
+}
+

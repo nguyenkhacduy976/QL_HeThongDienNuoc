@@ -1,0 +1,85 @@
+@using QL_HethongDiennuoc.Models.DTOs
+@model List<BillDto>
+
+@{
+    ViewData["Title"] = "Lịch sử thanh toán";
+}
+
+<h2><i class="bi bi-clock-history"></i> Lịch sử thanh toán</h2>
+
+<div class="card mt-4">
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="alert alert-success mb-3">
+                <i class="bi bi-check-circle-fill"></i> Tổng số hóa đơn đã thanh toán: <strong>@Model.Count</strong>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Số HĐ</th>
+                            <th>Loại dịch vụ</th>
+                            <th>Tiêu thụ</th>
+                            <th>Số tiền</th>
+                            <th>Ngày phát hành</th>
+                            <th>Ngày thanh toán</th>
+                            <th>Trạng thái</th>
+                            <th>PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var bill in Model)
+                        {
+                            <tr>
+                                <td><strong>@bill.BillNumber</strong></td>
+                                <td>
+                                    @if (bill.ServiceType == "Electric")
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-lightning-fill"></i> Điện</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info"><i class="bi bi-droplet-fill"></i> Nước</span>
+                                    }
+                                </td>
+                                <td>@bill.Consumption.ToString("N0") @(bill.ServiceType == "Electric" ? "kWh" : "m³")</td>
+                                <td class="fw-bold text-success">@bill.Amount.ToString("N0") đ</td>
+                                <td>@bill.IssueDate.ToString("dd/MM/yyyy")</td>
+                                <td>@bill.DueDate.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Đã thanh toán</span>
+                                </td>
+                                <td>
+                                    <a href="/api/bills/@bill.Id/pdf" class="btn btn-sm btn-success" target="_blank" title="Tải PDF">
+                                        <i class="bi bi-file-pdf"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-3">
+                <p class="text-muted">
+                    <i class="bi bi-info-circle"></i> Tổng số tiền đã thanh toán: 
+                    <strong class="text-success">@Model.Sum(b => b.Amount).ToString("N0") đ</strong>
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mb-0">
+                <i class="bi bi-info-circle"></i> Chưa có hóa đơn nào được thanh toán.
+            </div>
+        }
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="@Url.Action("Index", "Dashboard")" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Quay lại Dashboard
+    </a>
+</div>

@@ -51,6 +51,9 @@ public static class DbInitializer
             CreatedDate = DateTime.Now
         };
         context.Users.Add(customerUser);
+        
+        // Save users first to generate IDs
+        context.SaveChanges();
 
         // Seed Electric Tariffs (Bảng giá điện bậc thang VN)
         var electricTariffs = new[]
@@ -74,16 +77,16 @@ public static class DbInitializer
         };
         context.Tariffs.AddRange(waterTariffs);
 
-        // Seed Sample Customers
+        // Seed Sample Customers (link first customer with customerUser)
         var customers = new[]
         {
-            new Customer { FullName = "Nguyễn Văn A", Address = "123 Đường ABC, Quận 1, TP.HCM", PhoneNumber = "0901234567", Email = "nguyenvana@example.com", IdentityCard = "001234567890", CreatedDate = DateTime.Now, IsActive = true },
+            new Customer { FullName = "Nguyễn Văn A", Address = "123 Đường ABC, Quận 1, TP.HCM", PhoneNumber = "0901234567", Email = "nguyenvana@example.com", IdentityCard = "001234567890", CreatedDate = DateTime.Now, IsActive = true, UserId = customerUser.Id },
             new Customer { FullName = "Trần Thị B", Address = "456 Đường XYZ, Quận 3, TP.HCM", PhoneNumber = "0907654321", Email = "tranthib@example.com", IdentityCard = "009876543210", CreatedDate = DateTime.Now, IsActive = true },
             new Customer { FullName = "Lê Văn C", Address = "789 Đường DEF, Quận 5, TP.HCM", PhoneNumber = "0909999888", Email = "levanc@example.com", IdentityCard = "001122334455", CreatedDate = DateTime.Now, IsActive = true }
         };
         context.Customers.AddRange(customers);
 
-        // Save all
+        // Save tariffs and customers
         context.SaveChanges();
 
         // Seed Meters for customers (need customer IDs first)

@@ -7,6 +7,7 @@ using QL_HethongDiennuoc.Helpers;
 using QL_HethongDiennuoc.Models.DTOs;
 using QL_HethongDiennuoc.Models.Entities;
 using QL_HethongDiennuoc.Services.Interfaces;
+using System.Security.Claims;
 
 namespace QL_HethongDiennuoc.Controllers;
 
@@ -124,5 +125,80 @@ public class BillsController : Controller
             .ToListAsync();
 
         ViewBag.UnbilledReadings = unbilledReadings;
+    }
+
+    // Customer-specific actions
+    [Authorize(Roles = "Customer")]
+    [AllowAnonymous] // Override the class-level authorization
+    public async Task<IActionResult> MyBills()
+    {
+        try
+        {
+            // Get current user's ID from claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+            {
+                // Get all customers to find the one linked to this user
+                var allCustomers = await _context.Customers
+                    .Where(c => c.UserId == userId)
+                    .ToListAsync();
+                
+                if (allCustomers.Any())
+                {
+                    var customerId = allCustomers.First().Id;
+                    var bills = await _billingService.GetBillsByCustomerIdAsync(customerId);
+                    return View(bills);
+                }
+            }
+            
+            TempData["Warning"] = "Không tìm thấy thông tin khách hàng.";
+            return View(new List<BillDto>());
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = "Lỗi tải dữ liệu: " + ex.Message;
+            return View(new List<BillDto>());
+        }
+    }
+
+    [Authorize(Roles = "Customer")]
+    [AllowAnonymous]
+    public async Task<IActionResult> PaymentHistory()
+    {
+        try
+        {
+            // Get current user's ID from claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
+            {
+                // Find customer by UserId
+                var allCustomerRecords = await _context.Customers
+                    .Where(c => c.UserId == userId)
+                    .ToListAsync();
+                
+                if (allCustomerRecords.Any())
+                {
+                    var customerId = allCustomerRecords.First().Id;
+                    var bills = await _billingService.GetBillsByCustomerIdAsync(customerId);
+                    
+                    // Filter only paid bills
+                    var paidBills = bills.Where(b => b.Status == "Paid")
+                                        .OrderByDescending(b => b.DueDate) // Assuming DueDate as payment date
+                                        .ToList();
+                    
+                    return View(paidBills);
+                }
+            }
+            
+            TempData["Warning"] = "Không tìm thấy thông tin khách hàng.";
+            return View(new List<BillDto>());
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = "Lỗi tải dữ liệu: " + ex.Message;
+            return View(new List<BillDto>());
+        }
     }
 }

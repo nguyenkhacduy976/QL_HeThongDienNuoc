@@ -5,7 +5,6 @@ using QL_HethongDiennuoc.Services.Interfaces;
 
 namespace QL_HethongDiennuoc.Controllers;
 
-[Authorize(Roles = "Admin,Staff")]
 public class HomeController : Controller
 {
     private readonly ICustomerService _customerService;
@@ -22,12 +21,19 @@ public class HomeController : Controller
         _billingService = billingService;
     }
 
+    [Authorize]
     public async Task<IActionResult> Index()
     {
         // Customer redirect to their own dashboard
         if (User.IsInRole("Customer"))
         {
             return RedirectToAction("Index", "Dashboard");
+        }
+        
+        // Only Admin and Staff can view this page
+        if (!User.IsInRole("Admin") && !User.IsInRole("Staff"))
+        {
+            return RedirectToAction("AccessDenied", "Auth");
         }
 
         // Initialize ViewBag with default values

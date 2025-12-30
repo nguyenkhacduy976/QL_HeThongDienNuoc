@@ -58,7 +58,7 @@ public class AuthController : Controller
                     // Tạo Cookie Authentication từ JWT response
                     var claims = new List<Claim>
                     {
-                        new Claim(ClaimTypes.NameIdentifier, result.Username), // Dùng Username làm ID
+                        new Claim(ClaimTypes.NameIdentifier, result.UserId.ToString()), // User ID
                         new Claim(ClaimTypes.Name, result.Username),
                         new Claim(ClaimTypes.Email, result.Email),
                         new Claim(ClaimTypes.GivenName, result.FullName),
