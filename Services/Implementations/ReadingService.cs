@@ -22,9 +22,23 @@ public class ReadingService : IReadingService
     {
         var readings = await _context.Readings
             .Include(r => r.Meter)
+                .ThenInclude(m => m.Customer)
             .OrderByDescending(r => r.ReadingDate)
             .ToListAsync();
-        return _mapper.Map<List<ReadingDto>>(readings);
+        
+        return readings.Select(r => new ReadingDto
+        {
+            Id = r.Id,
+            ReadingDate = r.ReadingDate,
+            PreviousReading = r.PreviousReading,
+            CurrentReading = r.CurrentReading,
+            Consumption = r.Consumption,
+            Notes = r.Notes,
+            MeterId = r.MeterId,
+            MeterNumber = r.Meter?.MeterNumber ?? string.Empty,
+            CustomerName = r.Meter?.Customer?.FullName ?? string.Empty,
+            MeterType = r.Meter?.Type.ToString() ?? string.Empty
+        }).ToList();
     }
 
     public async Task<ReadingDto?> GetReadingByIdAsync(int id)
@@ -83,5 +97,64 @@ public class ReadingService : IReadingService
         await _context.Entry(reading).Reference(r => r.Meter).LoadAsync();
 
         return _mapper.Map<ReadingDto>(reading);
+    }
+
+    public async Task<ReadingDto?> UpdateReadingAsync(int id, UpdateReadingDto dto)
+    {
+        var reading = await _context.Readings
+            .Include(r => r.Bill)
+            .Include(r => r.Meter)
+                .ThenInclude(m => m.Customer)
+            .FirstOrDefaultAsync(r => r.Id == id);
+        
+        if (reading == null)
+            return null;
+
+        // Kiểm tra xem đã có hóa đơn liên quan chưa
+        if (reading.Bill != null)
+            throw new Exception("Không thể sửa chỉ số đã tạo hóa đơn!");
+
+        // Validate chỉ số mới phải >= chỉ số cũ
+        if (dto.CurrentReading < reading.PreviousReading)
+            throw new Exception($"Chỉ số mới ({dto.CurrentReading}) không được nhỏ hơn chỉ số cũ ({reading.PreviousReading})");
+
+        reading.ReadingDate = dto.ReadingDate;
+        reading.CurrentReading = dto.CurrentReading;
+        reading.Consumption = dto.CurrentReading - reading.PreviousReading;
+        reading.Notes = dto.Notes;
+
+        await _context.SaveChangesAsync();
+
+        return new ReadingDto
+        {
+            Id = reading.Id,
+            ReadingDate = reading.ReadingDate,
+            PreviousReading = reading.PreviousReading,
+            CurrentReading = reading.CurrentReading,
+            Consumption = reading.Consumption,
+            Notes = reading.Notes,
+            MeterId = reading.MeterId,
+            MeterNumber = reading.Meter?.MeterNumber ?? string.Empty,
+            CustomerName = reading.Meter?.Customer?.FullName ?? string.Empty,
+            MeterType = reading.Meter?.Type.ToString() ?? string.Empty
+        };
+    }
+
+    public async Task<bool> DeleteReadingAsync(int id)
+    {
+        var reading = await _context.Readings
+            .Include(r => r.Bill)
+            .FirstOrDefaultAsync(r => r.Id == id);
+        
+        if (reading == null)
+            return false;
+
+        // Kiểm tra xem đã có hóa đơn liên quan chưa
+        if (reading.Bill != null)
+            throw new Exception("Không thể xóa chỉ số đã tạo hóa đơn!");
+
+        _context.Readings.Remove(reading);
+        await _context.SaveChangesAsync();
+        return true;
     }
 }

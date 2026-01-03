@@ -10,11 +10,20 @@ public class ReadingDto
     public string? Notes { get; set; }
     public int MeterId { get; set; }
     public string MeterNumber { get; set; } = string.Empty;
+    public string CustomerName { get; set; } = string.Empty;
+    public string MeterType { get; set; } = string.Empty;
 }
 
 public class CreateReadingDto
 {
     public int MeterId { get; set; }
+    public DateTime ReadingDate { get; set; }
+    public decimal CurrentReading { get; set; }
+    public string? Notes { get; set; }
+}
+
+public class UpdateReadingDto
+{
     public DateTime ReadingDate { get; set; }
     public decimal CurrentReading { get; set; }
     public string? Notes { get; set; }

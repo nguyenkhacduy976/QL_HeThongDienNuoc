@@ -27,6 +27,8 @@ public interface IReadingService
     Task<ReadingDto?> GetReadingByIdAsync(int id);
     Task<List<ReadingDto>> GetReadingsByMeterIdAsync(int meterId);
     Task<ReadingDto> CreateReadingAsync(CreateReadingDto dto);
+    Task<ReadingDto?> UpdateReadingAsync(int id, UpdateReadingDto dto);
+    Task<bool> DeleteReadingAsync(int id);
 }
 
 public interface IBillingService

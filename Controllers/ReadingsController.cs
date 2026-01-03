@@ -72,4 +72,88 @@ public class ReadingsController : Controller
         }).ToList();
         ViewBag.Meters = meterItems;
     }
+
+    public async Task<IActionResult> Edit(int id)
+    {
+        try
+        {
+            var reading = await _readingService.GetReadingByIdAsync(id);
+            if (reading == null)
+            {
+                TempData["Error"] = "Không tìm thấy chỉ số!";
+                return RedirectToAction(nameof(Index));
+            }
+            
+            var dto = new UpdateReadingDto
+            {
+                ReadingDate = reading.ReadingDate,
+                CurrentReading = reading.CurrentReading,
+                Notes = reading.Notes
+            };
+            
+            ViewBag.Reading = reading;
+            return View(dto);
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            return RedirectToAction(nameof(Index));
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, UpdateReadingDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            var reading = await _readingService.GetReadingByIdAsync(id);
+            ViewBag.Reading = reading;
+            return View(dto);
+        }
+
+        try
+        {
+            var result = await _readingService.UpdateReadingAsync(id, dto);
+            if (result == null)
+            {
+                TempData["Error"] = "Không tìm thấy chỉ số cần sửa!";
+            }
+            else
+            {
+                TempData["Success"] = "Đã cập nhật chỉ số thành công!";
+            }
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+            var reading = await _readingService.GetReadingByIdAsync(id);
+            ViewBag.Reading = reading;
+            return View(dto);
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        try
+        {
+            var result = await _readingService.DeleteReadingAsync(id);
+            if (result)
+            {
+                TempData["Success"] = "Đã xóa chỉ số thành công!";
+            }
+            else
+            {
+                TempData["Error"] = "Không tìm thấy chỉ số cần xóa!";
+            }
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+        return RedirectToAction(nameof(Index));
+    }
 }

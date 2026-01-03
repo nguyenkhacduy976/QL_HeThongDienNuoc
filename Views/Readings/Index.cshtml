@@ -36,6 +36,8 @@
                     <tr>
                         <th>Ngày ghi</th>
                         <th>Công tơ</th>
+                        <th>Loại</th>
+                        <th>Khách hàng</th>
                         <th>Chỉ số cũ</th>
                         <th>Chỉ số mới</th>
                         <th>Tiêu thụ</th>
@@ -49,6 +51,21 @@
                         <tr>
                             <td>@reading.ReadingDate.ToString("dd/MM/yyyy HH:mm")</td>
                             <td><strong>@(reading.MeterNumber ?? "N/A")</strong></td>
+                            <td>
+                                @if (reading.MeterType == "Electric")
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-lightning-charge"></i> Điện</span>
+                                }
+                                else if (reading.MeterType == "Water")
+                                {
+                                    <span class="badge bg-info text-white"><i class="bi bi-droplet"></i> Nước</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@reading.MeterType</span>
+                                }
+                            </td>
+                            <td>@(reading.CustomerName ?? "N/A")</td>
                             <td>@reading.PreviousReading.ToString("N0")</td>
                             <td><strong class="text-primary">@reading.CurrentReading.ToString("N0")</strong></td>
                             <td>
@@ -58,9 +75,18 @@
                             </td>
                             <td>@(reading.Notes ?? "")</td>
                             <td>
+                                <a asp-controller="Readings" asp-action="Edit" asp-route-id="@reading.Id" class="btn btn-sm btn-outline-warning" title="Sửa chỉ số">
+                                    <i class="bi bi-pencil"></i> Sửa
+                                </a>
                                 <a asp-controller="Bills" asp-action="Generate" asp-route-readingId="@reading.Id" class="btn btn-sm btn-outline-success" title="Tạo hóa đơn">
                                     <i class="bi bi-receipt"></i> Tạo HĐ
                                 </a>
+                                <form asp-controller="Readings" asp-action="Delete" asp-route-id="@reading.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa chỉ số này?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa chỉ số">
+                                        <i class="bi bi-trash"></i> Xóa
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     }

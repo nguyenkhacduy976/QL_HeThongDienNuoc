@@ -45,8 +45,32 @@ public class CustomerService : ICustomerService
 
     public async Task<bool> DeleteCustomerAsync(int id)
     {
-        var customer = await _context.Customers.FindAsync(id);
+        var customer = await _context.Customers
+            .Include(c => c.Meters)
+                .ThenInclude(m => m.Readings)
+            .FirstOrDefaultAsync(c => c.Id == id);
+            
         if (customer == null) return false;
+
+        // Kiểm tra xem có công tơ với chỉ số không
+        var hasReadings = customer.Meters.Any(m => m.Readings.Any());
+        if (hasReadings)
+        {
+            throw new Exception("Không thể xóa khách hàng đã có lịch sử ghi chỉ số! Hãy vô hiệu hóa thay vì xóa.");
+        }
+
+        // Kiểm tra xem có hóa đơn không
+        var hasBills = await _context.Bills.AnyAsync(b => b.CustomerId == id);
+        if (hasBills)
+        {
+            throw new Exception("Không thể xóa khách hàng đã có hóa đơn! Hãy vô hiệu hóa thay vì xóa.");
+        }
+
+        // Xóa các công tơ (nếu chưa có readings)
+        if (customer.Meters.Any())
+        {
+            _context.Meters.RemoveRange(customer.Meters);
+        }
 
         // Also delete the associated User if exists
         if (customer.UserId.HasValue)

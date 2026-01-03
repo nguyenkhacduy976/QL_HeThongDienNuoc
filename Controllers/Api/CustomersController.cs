@@ -59,10 +59,17 @@ public class ApiCustomersController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
-        var result = await _customerService.DeleteCustomerAsync(id);
-        if (!result)
-            return NotFound(new { message = "Customer not found" });
+        try
+        {
+            var result = await _customerService.DeleteCustomerAsync(id);
+            if (!result)
+                return NotFound(new { message = "Không tìm thấy khách hàng" });
 
-        return Ok(new { message = "Customer deleted successfully" });
+            return Ok(new { message = "Đã xóa khách hàng thành công" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

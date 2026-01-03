@@ -56,4 +56,40 @@ public class ApiReadingsController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Staff")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateReadingDto dto)
+    {
+        try
+        {
+            var reading = await _readingService.UpdateReadingAsync(id, dto);
+            if (reading == null)
+                return NotFound(new { message = "Không tìm thấy chỉ số cần sửa" });
+
+            return Ok(reading);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin,Staff")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        try
+        {
+            var result = await _readingService.DeleteReadingAsync(id);
+            if (!result)
+                return NotFound(new { message = "Không tìm thấy chỉ số cần xóa" });
+
+            return Ok(new { message = "Đã xóa chỉ số thành công" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
