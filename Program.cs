@@ -51,7 +51,6 @@ builder.Services.AddScoped<IReadingService, ReadingService>();
 builder.Services.AddScoped<IBillingService, BillingService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IServiceManagementService, ServiceManagementService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IDebtManagementService, DebtManagementService>();
@@ -87,15 +86,20 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         };
     });
 
-// Authorization: Accept both Cookie and JWT
+// Authorization: Cookie for MVC (with redirect), JWT for API
 builder.Services.AddAuthorization(options =>
 {
-    options.DefaultPolicy = new AuthorizationPolicyBuilder()
-        .AddAuthenticationSchemes(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            JwtBearerDefaults.AuthenticationScheme)
+    // Default policy for MVC - uses Cookie auth (will redirect to login)
+    options.DefaultPolicy = new AuthorizationPolicyBuilder(
+            CookieAuthenticationDefaults.AuthenticationScheme)
         .RequireAuthenticatedUser()
         .Build();
+    
+    // API policy - uses JWT auth (returns 401)
+    options.AddPolicy("ApiPolicy", new AuthorizationPolicyBuilder(
+            JwtBearerDefaults.AuthenticationScheme)
+        .RequireAuthenticatedUser()
+        .Build());
 });
 
 // Swagger

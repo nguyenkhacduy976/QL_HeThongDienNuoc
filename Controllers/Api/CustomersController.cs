@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QL_HethongDiennuoc.Models.DTOs;
@@ -6,8 +7,8 @@ using QL_HethongDiennuoc.Services.Interfaces;
 namespace QL_HethongDiennuoc.Controllers.Api;
 
 [ApiController]
-[Route("api/customers")] // Fixed route
-[Authorize]
+[Route("api/customers")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class ApiCustomersController : ControllerBase
 {
     private readonly ICustomerService _customerService;
@@ -34,20 +35,7 @@ public class ApiCustomersController : ControllerBase
         return Ok(customer);
     }
 
-    [HttpPost]
-    [Authorize(Roles = "Admin,Staff")]
-    public async Task<IActionResult> Create([FromBody] CreateCustomerDto dto)
-    {
-        try
-        {
-            var customer = await _customerService.CreateCustomerAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = customer.Id }, customer);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
+
 
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,Staff")]

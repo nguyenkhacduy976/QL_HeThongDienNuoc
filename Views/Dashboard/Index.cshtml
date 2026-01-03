@@ -119,8 +119,11 @@
 
 <!-- Recent Bills -->
 <div class="card">
-    <div class="card-header bg-transparent">
-        <h5><i class="bi bi-receipt"></i> Hóa đơn gần đây</h5>
+    <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-receipt"></i> Hóa đơn gần đây</h5>
+        <a href="@Url.Action("MyBills", "Bills")" class="btn btn-sm btn-primary">
+            <i class="bi bi-eye"></i> Xem tất cả
+        </a>
     </div>
     <div class="card-body">
         @if (((List<BillDto>)ViewBag.MyBills).Any())
@@ -137,7 +140,6 @@
                             <th>Số tiền</th>
                             <th>Trạng thái</th>
                             <th>PDF</th>
-                            <th>Thanh toán</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -178,31 +180,10 @@
                                         <i class="bi bi-file-pdf"></i>
                                     </a>
                                 </td>
-                                <td>
-                                    @if (bill.Status != "Paid")
-                                    {
-                                        var remaining = bill.Amount - bill.PaidAmount;
-                                        <button type="button" class="btn btn-sm btn-primary pay-bill-btn" 
-                                                data-bill-id="@bill.Id" 
-                                                data-bill-number="@bill.BillNumber"
-                                                data-amount="@remaining">
-                                            <i class="bi bi-credit-card"></i> Thanh toán
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-success"><i class="bi bi-check-circle"></i></span>
-                                    }
-                                </td>
                             </tr>
                         }
                     </tbody>
                 </table>
-            </div>
-            <div class="text-center mt-3">
-                <a href="@Url.Action("MyBills", "Bills")" class="btn btn-primary">
-                    <i class="bi bi-eye"></i> Xem tất cả hóa đơn
-                </a>
             </div>
         }
         else
@@ -214,59 +195,9 @@
     </div>
 </div>
 
-    </div>
-</div>
-
-<!-- Payment Modal -->
-<div class="modal fade" id="paymentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title"><i class="bi bi-credit-card"></i> Thanh toán hóa đơn</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="paymentForm">
-                <div class="modal-body">
-                    <input type="hidden" id="payBillId" name="billId" />
-                    
-                    <div class="alert alert-info">
-                        <strong>Số hóa đơn:</strong> <span id="payBillNumber"></span><br/>
-                        <strong>Số tiền:</strong> <span id="payAmount"></span> đ
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label"><i class="bi bi-wallet2"></i> Phương thức thanh toán</label>
-                        <select class="form-select" id="paymentMethod" name="paymentMethod" required>
-                            <option value="">-- Chọn phương thức --</option>
-                            <option value="1">💵 Tiền mặt</option>
-                            <option value="2">🏦 Chuyển khoản ngân hàng</option>
-                            <option value="3">💳 Thẻ tín dụng/Ghi nợ</option>
-                            <option value="4">📱 Ví MoMo</option>
-                            <option value="5">🔄 Khác</option>
-                        </select>
-                    </div>
-
-                    <div class="alert alert-warning">
-                        <i class="bi bi-info-circle"></i> Đây là thanh toán giả định. Trong thực tế sẽ kết nối với cổng thanh toán.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="bi bi-x-circle"></i> Hủy
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle"></i> Xác nhận thanh toán
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Consumption Chart
         @if (((Dictionary<string, decimal>)ViewBag.MonthlyConsumption).Any())
         {
             var monthlyData = (Dictionary<string, decimal>)ViewBag.MonthlyConsumption;
@@ -303,62 +234,5 @@
             });
             </text>
         }
-
-        // Payment modal handling
-        document.querySelectorAll('.pay-bill-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const billId = this.getAttribute('data-bill-id');
-                const billNumber = this.getAttribute('data-bill-number');
-                const amount = parseFloat(this.getAttribute('data-amount'));
-
-                document.getElementById('payBillId').value = billId;
-                document.getElementById('payBillNumber').textContent = billNumber;
-                document.getElementById('payAmount').textContent = amount.toLocaleString('vi-VN');
-
-                const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
-                modal.show();
-            });
-        });
-
-        // Payment form submission
-        document.getElementById('paymentForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const billId = document.getElementById('payBillId').value;
-            const paymentMethod = document.getElementById('paymentMethod').value;
-
-            if (!paymentMethod) {
-                alert('Vui lòng chọn phương thức thanh toán!');
-                return;
-            }
-
-            try {
-                const formData = new FormData();
-                formData.append('billId', billId);
-                formData.append('paymentMethod', paymentMethod);
-                formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
-
-                const response = await fetch('@Url.Action("PayBill", "Dashboard")', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    // Close modal
-                    bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
-                    
-                    // Show success message and reload
-                    alert(result.message);
-                    window.location.reload();
-                } else {
-                    alert('Lỗi: ' + result.message);
-                }
-            } catch (error) {
-                alert('Có lỗi xảy ra: ' + error.message);
-            }
-        });
     </script>
 }
-

@@ -7,7 +7,6 @@ public interface ICustomerService
 {
     Task<List<CustomerDto>> GetAllCustomersAsync();
     Task<CustomerDto?> GetCustomerByIdAsync(int id);
-    Task<CustomerDto> CreateCustomerAsync(CreateCustomerDto dto);
     Task<CustomerDto?> UpdateCustomerAsync(int id, UpdateCustomerDto dto);
     Task<bool> DeleteCustomerAsync(int id);
 }
@@ -46,13 +45,6 @@ public interface IPaymentService
     Task<PaymentDto?> GetPaymentByIdAsync(int id);
     Task<List<PaymentDto>> GetPaymentsByBillIdAsync(int billId);
     Task<PaymentDto> CreatePaymentAsync(CreatePaymentDto dto);
-}
-
-public interface IServiceManagementService
-{
-    Task<List<ServiceStatusDto>> GetServicesByCustomerIdAsync(int customerId);
-    Task<ServiceStatusDto> SuspendServiceAsync(SuspendServiceDto dto);
-    Task<ServiceStatusDto> RestoreServiceAsync(RestoreServiceDto dto);
 }
 
 public interface IAuthService

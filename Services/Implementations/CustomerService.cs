@@ -30,17 +30,7 @@ public class CustomerService : ICustomerService
         return customer == null ? null : _mapper.Map<CustomerDto>(customer);
     }
 
-    public async Task<CustomerDto> CreateCustomerAsync(CreateCustomerDto dto)
-    {
-        var customer = _mapper.Map<Customer>(dto);
-        customer.CreatedDate = DateTime.Now;
-        customer.IsActive = true;
 
-        _context.Customers.Add(customer);
-        await _context.SaveChangesAsync();
-
-        return _mapper.Map<CustomerDto>(customer);
-    }
 
     public async Task<CustomerDto?> UpdateCustomerAsync(int id, UpdateCustomerDto dto)
     {

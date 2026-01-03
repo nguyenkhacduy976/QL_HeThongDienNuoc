@@ -29,30 +29,7 @@ public class CustomersController : Controller
         }
     }
 
-    public IActionResult Create()
-    {
-        return View();
-    }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(CreateCustomerDto dto)
-    {
-        if (!ModelState.IsValid)
-            return View(dto);
-
-        try
-        {
-            await _customerService.CreateCustomerAsync(dto);
-            TempData["Success"] = "Thêm khách hàng thành công!";
-            return RedirectToAction(nameof(Index));
-        }
-        catch (Exception ex)
-        {
-            TempData["Error"] = "Có lỗi xảy ra: " + ex.Message;
-            return View(dto);
-        }
-    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
