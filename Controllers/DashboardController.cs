@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QL_HethongDiennuoc.Models.DTOs;
-using QL_HethongDiennuoc.Services.Interfaces;
+using QL_HethongDiennuoc.Services.ApiClients;
 using System.Security.Claims;
 
 namespace QL_HethongDiennuoc.Controllers;
@@ -9,21 +9,11 @@ namespace QL_HethongDiennuoc.Controllers;
 [Authorize(Roles = "Customer")]
 public class DashboardController : Controller
 {
-    private readonly ICustomerService _customerService;
-    private readonly IBillingService _billingService;
-    private readonly IMeterService _meterService;
-    private readonly IPaymentService _paymentService;
+    private readonly IApiClient _apiClient;
 
-    public DashboardController(
-        ICustomerService customerService,
-        IBillingService billingService,
-        IMeterService meterService,
-        IPaymentService paymentService)
+    public DashboardController(IApiClient apiClient)
     {
-        _customerService = customerService;
-        _billingService = billingService;
-        _meterService = meterService;
-        _paymentService = paymentService;
+        _apiClient = apiClient;
     }
 
     public async Task<IActionResult> Index()
@@ -47,15 +37,16 @@ public class DashboardController : Controller
             if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
             {
                 // Find customer by UserId
-                var customers = await _customerService.GetAllCustomersAsync();
-                var customer = customers.FirstOrDefault(c => c.UserId == userId);
+                var customers = await _apiClient.GetAsync<List<CustomerDto>>("customers");
+                var customer = (customers ?? new List<CustomerDto>()).FirstOrDefault(c => c.UserId == userId);
                 
                 if (customer != null)
                 {
                     ViewBag.CustomerName = customer.FullName;
                     
                     // Get bills for this customer
-                    var bills = await _billingService.GetBillsByCustomerIdAsync(customer.Id);
+                    var bills = await _apiClient.GetAsync<List<BillDto>>($"bills/customer/{customer.Id}");
+                    bills ??= new List<BillDto>();
                     
                     ViewBag.TotalBills = bills.Count;
                     ViewBag.UnpaidBills = bills.Count(b => b.Status != "Paid");
@@ -63,8 +54,8 @@ public class DashboardController : Controller
                     ViewBag.MyBills = bills.OrderByDescending(b => b.IssueDate).Take(5).ToList();
                     
                     // Get meters for this customer
-                    var allMeters = await _meterService.GetAllMetersAsync();
-                    var customerMeters = allMeters.Where(m => m.CustomerId == customer.Id).ToList();
+                    var allMeters = await _apiClient.GetAsync<List<MeterDto>>($"meters/customer/{customer.Id}");
+                    var customerMeters = allMeters ?? new List<MeterDto>();
                     ViewBag.Meters = customerMeters;
                     
                     // Separate electric and water meters for easy access
@@ -115,16 +106,16 @@ public class DashboardController : Controller
             }
 
             // Get customer
-            var customers = await _customerService.GetAllCustomersAsync();
-            var customer = customers.FirstOrDefault(c => c.UserId == userId);
+            var customers = await _apiClient.GetAsync<List<CustomerDto>>("customers");
+            var customer = (customers ?? new List<CustomerDto>()).FirstOrDefault(c => c.UserId == userId);
             if (customer == null)
             {
                 return Json(new { success = false, message = "Không tìm thấy thông tin khách hàng" });
             }
 
             // Get bill and verify ownership
-            var bills = await _billingService.GetBillsByCustomerIdAsync(customer.Id);
-            var bill = bills.FirstOrDefault(b => b.Id == billId);
+            var bills = await _apiClient.GetAsync<List<BillDto>>($"bills/customer/{customer.Id}");
+            var bill = (bills ?? new List<BillDto>()).FirstOrDefault(b => b.Id == billId);
             if (bill == null)
             {
                 return Json(new { success = false, message = "Không tìm thấy hóa đơn hoặc bạn không có quyền thanh toán hóa đơn này" });
@@ -139,7 +130,7 @@ public class DashboardController : Controller
             // Calculate remaining amount
             var remainingAmount = bill.Amount - bill.PaidAmount;
 
-            // Create payment
+            // Create payment via API
             var paymentDto = new CreatePaymentDto
             {
                 BillId = billId,
@@ -148,7 +139,7 @@ public class DashboardController : Controller
                 Notes = $"Thanh toán từ khách hàng {customer.FullName}"
             };
 
-            var payment = await _paymentService.CreatePaymentAsync(paymentDto);
+            var payment = await _apiClient.PostAsync<PaymentDto>("payments", paymentDto);
 
             TempData["Success"] = $"Thanh toán thành công! Số tiền: {remainingAmount:N0} đ";
             return Json(new { success = true, message = "Thanh toán thành công!" });

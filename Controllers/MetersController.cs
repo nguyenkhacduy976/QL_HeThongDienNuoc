@@ -2,28 +2,26 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QL_HethongDiennuoc.Models.DTOs;
-using QL_HethongDiennuoc.Services.Interfaces;
+using QL_HethongDiennuoc.Services.ApiClients;
 
 namespace QL_HethongDiennuoc.Controllers;
 
 [Authorize(Roles = "Admin")]
 public class MetersController : Controller
 {
-    private readonly IMeterService _meterService;
-    private readonly ICustomerService _customerService;
+    private readonly IApiClient _apiClient;
 
-    public MetersController(IMeterService meterService, ICustomerService customerService)
+    public MetersController(IApiClient apiClient)
     {
-        _meterService = meterService;
-        _customerService = customerService;
+        _apiClient = apiClient;
     }
 
     public async Task<IActionResult> Index()
     {
         try
         {
-            var meters = await _meterService.GetAllMetersAsync();
-            return View(meters);
+            var meters = await _apiClient.GetAsync<List<MeterDto>>("meters");
+            return View(meters ?? new List<MeterDto>());
         }
         catch (Exception ex)
         {
@@ -50,7 +48,7 @@ public class MetersController : Controller
 
         try
         {
-            await _meterService.CreateMeterAsync(dto);
+            await _apiClient.PostAsync<MeterDto>("meters", dto);
             TempData["Success"] = "Thêm công tơ thành công!";
             return RedirectToAction(nameof(Index));
         }
@@ -66,7 +64,7 @@ public class MetersController : Controller
     {
         try
         {
-            var meter = await _meterService.GetMeterByIdAsync(id);
+            var meter = await _apiClient.GetAsync<MeterDto>($"meters/{id}");
 
             if (meter == null)
             {
@@ -90,21 +88,21 @@ public class MetersController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var meter = await _meterService.GetMeterByIdAsync(id);
+            var meter = await _apiClient.GetAsync<MeterDto>($"meters/{id}");
             await LoadCustomersToViewBag();
             return View(meter);
         }
 
         try
         {
-            await _meterService.UpdateMeterAsync(id, dto);
+            await _apiClient.PutAsync<MeterDto>($"meters/{id}", dto);
             TempData["Success"] = "Cập nhật công tơ thành công!";
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
             TempData["Error"] = "Có lỗi xảy ra: " + ex.Message;
-            var meter = await _meterService.GetMeterByIdAsync(id);
+            var meter = await _apiClient.GetAsync<MeterDto>($"meters/{id}");
             await LoadCustomersToViewBag();
             return View(meter);
         }
@@ -116,7 +114,7 @@ public class MetersController : Controller
     {
         try
         {
-            await _meterService.DeleteMeterAsync(id);
+            await _apiClient.DeleteAsync($"meters/{id}");
             TempData["Success"] = "Xóa công tơ thành công!";
         }
         catch (Exception ex)
@@ -129,7 +127,7 @@ public class MetersController : Controller
 
     private async Task LoadCustomersToViewBag()
     {
-        var customers = await _customerService.GetAllCustomersAsync();
-        ViewBag.Customers = new SelectList(customers, "Id", "FullName");
+        var customers = await _apiClient.GetAsync<List<CustomerDto>>("customers");
+        ViewBag.Customers = new SelectList(customers ?? new List<CustomerDto>(), "Id", "FullName");
     }
 }

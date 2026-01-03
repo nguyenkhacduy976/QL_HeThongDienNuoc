@@ -1,26 +1,26 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QL_HethongDiennuoc.Models.DTOs;
-using QL_HethongDiennuoc.Services.Interfaces;
+using QL_HethongDiennuoc.Services.ApiClients;
 
 namespace QL_HethongDiennuoc.Controllers;
 
 [Authorize(Roles = "Admin")]
 public class CustomersController : Controller
 {
-    private readonly ICustomerService _customerService;
+    private readonly IApiClient _apiClient;
 
-    public CustomersController(ICustomerService customerService)
+    public CustomersController(IApiClient apiClient)
     {
-        _customerService = customerService;
+        _apiClient = apiClient;
     }
 
     public async Task<IActionResult> Index()
     {
         try
         {
-            var customers = await _customerService.GetAllCustomersAsync();
-            return View(customers);
+            var customers = await _apiClient.GetAsync<List<CustomerDto>>("customers");
+            return View(customers ?? new List<CustomerDto>());
         }
         catch (Exception ex)
         {
@@ -29,20 +29,18 @@ public class CustomersController : Controller
         }
     }
 
-
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
         try
         {
-            await _customerService.DeleteCustomerAsync(id);
+            await _apiClient.DeleteAsync($"customers/{id}");
             TempData["Success"] = "Xóa khách hàng thành công!";
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Không thể xóa: " + ex.Message;
+            TempData["Error"] = ex.Message;
         }
 
         return RedirectToAction(nameof(Index));
@@ -52,7 +50,7 @@ public class CustomersController : Controller
     {
         try
         {
-            var customer = await _customerService.GetCustomerByIdAsync(id);
+            var customer = await _apiClient.GetAsync<CustomerDto>($"customers/{id}");
             
             if (customer == null)
             {
@@ -75,20 +73,20 @@ public class CustomersController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var customer = await _customerService.GetCustomerByIdAsync(id);
+            var customer = await _apiClient.GetAsync<CustomerDto>($"customers/{id}");
             return View(customer);
         }
 
         try
         {
-            await _customerService.UpdateCustomerAsync(id, dto);
+            await _apiClient.PutAsync<CustomerDto>($"customers/{id}", dto);
             TempData["Success"] = "Cập nhật khách hàng thành công!";
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
             TempData["Error"] = "Có lỗi xảy ra: " + ex.Message;
-            var customer = await _customerService.GetCustomerByIdAsync(id);
+            var customer = await _apiClient.GetAsync<CustomerDto>($"customers/{id}");
             return View(customer);
         }
     }

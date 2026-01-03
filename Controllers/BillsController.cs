@@ -6,7 +6,7 @@ using QL_HethongDiennuoc.Data;
 using QL_HethongDiennuoc.Helpers;
 using QL_HethongDiennuoc.Models.DTOs;
 using QL_HethongDiennuoc.Models.Entities;
-using QL_HethongDiennuoc.Services.Interfaces;
+using QL_HethongDiennuoc.Services.ApiClients;
 using System.Security.Claims;
 
 namespace QL_HethongDiennuoc.Controllers;
@@ -14,14 +14,12 @@ namespace QL_HethongDiennuoc.Controllers;
 [Authorize(Roles = "Admin,Staff")]
 public class BillsController : Controller
 {
-    private readonly IBillingService _billingService;
-    private readonly IReadingService _readingService;
+    private readonly IApiClient _apiClient;
     private readonly ApplicationDbContext _context;
 
-    public BillsController(IBillingService billingService, IReadingService readingService, ApplicationDbContext context)
+    public BillsController(IApiClient apiClient, ApplicationDbContext context)
     {
-        _billingService = billingService;
-        _readingService = readingService;
+        _apiClient = apiClient;
         _context = context;
     }
 
@@ -29,8 +27,8 @@ public class BillsController : Controller
     {
         try
         {
-            var bills = await _billingService.GetAllBillsAsync();
-            return View(bills);
+            var bills = await _apiClient.GetAsync<List<BillDto>>("bills");
+            return View(bills ?? new List<BillDto>());
         }
         catch (Exception ex)
         {
@@ -63,9 +61,14 @@ public class BillsController : Controller
 
         try
         {
-            var bill = await _billingService.GenerateBillAsync(dto);
-            TempData["Success"] = $"Tạo hóa đơn thành công! Số hóa đơn: {bill.BillNumber}, Số tiền: {bill.Amount:N0} đ";
-            return RedirectToAction(nameof(Details), new { id = bill.Id });
+            var bill = await _apiClient.PostAsync<BillDto>("bills/generate", dto);
+            if (bill != null)
+            {
+                TempData["Success"] = $"Tạo hóa đơn thành công! Số hóa đơn: {bill.BillNumber}, Số tiền: {bill.Amount:N0} đ";
+                return RedirectToAction(nameof(Details), new { id = bill.Id });
+            }
+            TempData["Error"] = "Không thể tạo hóa đơn!";
+            return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
@@ -147,8 +150,8 @@ public class BillsController : Controller
                 if (allCustomers.Any())
                 {
                     var customerId = allCustomers.First().Id;
-                    var bills = await _billingService.GetBillsByCustomerIdAsync(customerId);
-                    return View(bills);
+                    var bills = await _apiClient.GetAsync<List<BillDto>>($"bills/customer/{customerId}");
+                    return View(bills ?? new List<BillDto>());
                 }
             }
             
@@ -181,12 +184,13 @@ public class BillsController : Controller
                 if (allCustomerRecords.Any())
                 {
                     var customerId = allCustomerRecords.First().Id;
-                    var bills = await _billingService.GetBillsByCustomerIdAsync(customerId);
+                    var bills = await _apiClient.GetAsync<List<BillDto>>($"bills/customer/{customerId}");
                     
                     // Filter only paid bills
-                    var paidBills = bills.Where(b => b.Status == "Paid")
-                                        .OrderByDescending(b => b.DueDate) // Assuming DueDate as payment date
-                                        .ToList();
+                    var paidBills = (bills ?? new List<BillDto>())
+                        .Where(b => b.Status == "Paid")
+                        .OrderByDescending(b => b.DueDate)
+                        .ToList();
                     
                     return View(paidBills);
                 }

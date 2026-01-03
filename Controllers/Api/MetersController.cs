@@ -8,7 +8,7 @@ namespace QL_HethongDiennuoc.Controllers.Api;
 
 [ApiController]
 [Route("api/meters")]
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[Authorize(AuthenticationSchemes = "Bearer,Cookies")]
 public class ApiMetersController : ControllerBase
 {
     private readonly IMeterService _meterService;

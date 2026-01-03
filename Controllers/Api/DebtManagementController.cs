@@ -8,7 +8,7 @@ namespace QL_HethongDiennuoc.Controllers.Api;
 
 [ApiController]
 [Route("api/debt-management")]
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+[Authorize(AuthenticationSchemes = "Bearer,Cookies", Roles = "Admin")]
 public class ApiDebtManagementController : ControllerBase
 {
     private readonly IDebtManagementService _debtManagementService;

@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using QL_HethongDiennuoc.Data;
 using QL_HethongDiennuoc.Services.Implementations;
 using QL_HethongDiennuoc.Services.Interfaces;
+using QL_HethongDiennuoc.Services.ApiClients;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,8 +23,15 @@ builder.Services.AddRazorPages();
 // AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
 
-// HttpClient
-builder.Services.AddHttpClient();
+// HttpContextAccessor (required for ApiClient)
+builder.Services.AddHttpContextAccessor();
+
+// ApiClient for MVC Controllers to call API
+builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5058/api/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
 // Session
 builder.Services.AddSession(options =>
@@ -44,7 +52,7 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Services (Dependency Injection)
+// Services (Dependency Injection) - Keep for API Controllers
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IMeterService, MeterService>();
 builder.Services.AddScoped<IReadingService, ReadingService>();

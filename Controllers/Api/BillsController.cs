@@ -9,7 +9,7 @@ namespace QL_HethongDiennuoc.Controllers.Api;
 
 [ApiController]
 [Route("api/bills")]
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[Authorize(AuthenticationSchemes = "Bearer,Cookies")]
 public class ApiBillsController : ControllerBase
 {
     private readonly IBillingService _billingService;

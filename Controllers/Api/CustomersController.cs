@@ -8,7 +8,7 @@ namespace QL_HethongDiennuoc.Controllers.Api;
 
 [ApiController]
 [Route("api/customers")]
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[Authorize(AuthenticationSchemes = "Bearer,Cookies")]
 public class ApiCustomersController : ControllerBase
 {
     private readonly ICustomerService _customerService;

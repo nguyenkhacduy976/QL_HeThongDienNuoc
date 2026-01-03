@@ -7,7 +7,7 @@ namespace QL_HethongDiennuoc.Controllers.Api;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[Authorize(AuthenticationSchemes = "Bearer,Cookies")]
 public class ReportsController : ControllerBase
 {
     private readonly IReportService _reportService;

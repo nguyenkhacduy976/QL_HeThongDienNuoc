@@ -1,24 +1,17 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QL_HethongDiennuoc.Models.DTOs;
-using QL_HethongDiennuoc.Services.Interfaces;
+using QL_HethongDiennuoc.Services.ApiClients;
 
 namespace QL_HethongDiennuoc.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly ICustomerService _customerService;
-    private readonly IMeterService _meterService;
-    private readonly IBillingService _billingService;
+    private readonly IApiClient _apiClient;
 
-    public HomeController(
-        ICustomerService customerService,
-        IMeterService meterService,
-        IBillingService billingService)
+    public HomeController(IApiClient apiClient)
     {
-        _customerService = customerService;
-        _meterService = meterService;
-        _billingService = billingService;
+        _apiClient = apiClient;
     }
 
     [Authorize]
@@ -45,9 +38,13 @@ public class HomeController : Controller
 
         try
         {
-            var customers = await _customerService.GetAllCustomersAsync();
-            var meters = await _meterService.GetAllMetersAsync();
-            var bills = await _billingService.GetAllBillsAsync();
+            var customers = await _apiClient.GetAsync<List<CustomerDto>>("customers");
+            var meters = await _apiClient.GetAsync<List<MeterDto>>("meters");
+            var bills = await _apiClient.GetAsync<List<BillDto>>("bills");
+            
+            customers ??= new List<CustomerDto>();
+            meters ??= new List<MeterDto>();
+            bills ??= new List<BillDto>();
             
             ViewBag.TotalCustomers = customers.Count;
             ViewBag.TotalMeters = meters.Count;

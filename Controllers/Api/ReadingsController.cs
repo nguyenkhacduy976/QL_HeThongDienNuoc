@@ -8,7 +8,7 @@ namespace QL_HethongDiennuoc.Controllers.Api;
 
 [ApiController]
 [Route("api/readings")]
-[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[Authorize(AuthenticationSchemes = "Bearer,Cookies")]
 public class ApiReadingsController : ControllerBase
 {
     private readonly IReadingService _readingService;

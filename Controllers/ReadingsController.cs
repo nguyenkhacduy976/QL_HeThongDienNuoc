@@ -2,28 +2,26 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QL_HethongDiennuoc.Models.DTOs;
-using QL_HethongDiennuoc.Services.Interfaces;
+using QL_HethongDiennuoc.Services.ApiClients;
 
 namespace QL_HethongDiennuoc.Controllers;
 
 [Authorize(Roles = "Admin,Staff")]
 public class ReadingsController : Controller
 {
-    private readonly IReadingService _readingService;
-    private readonly IMeterService _meterService;
+    private readonly IApiClient _apiClient;
 
-    public ReadingsController(IReadingService readingService, IMeterService meterService)
+    public ReadingsController(IApiClient apiClient)
     {
-        _readingService = readingService;
-        _meterService = meterService;
+        _apiClient = apiClient;
     }
 
     public async Task<IActionResult> Index()
     {
         try
         {
-            var readings = await _readingService.GetAllReadingsAsync();
-            return View(readings);
+            var readings = await _apiClient.GetAsync<List<ReadingDto>>("readings");
+            return View(readings ?? new List<ReadingDto>());
         }
         catch (Exception ex)
         {
@@ -50,8 +48,11 @@ public class ReadingsController : Controller
 
         try
         {
-            var reading = await _readingService.CreateReadingAsync(dto);
-            TempData["Success"] = $"Ghi chỉ số thành công! Tiêu thụ: {reading.Consumption:N0}";
+            var reading = await _apiClient.PostAsync<ReadingDto>("readings", dto);
+            if (reading != null)
+            {
+                TempData["Success"] = $"Ghi chỉ số thành công! Tiêu thụ: {reading.Consumption:N0}";
+            }
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
@@ -64,12 +65,14 @@ public class ReadingsController : Controller
 
     private async Task LoadMetersToViewBag()
     {
-        var meters = await _meterService.GetAllMetersAsync();
-        var meterItems = meters.Where(m => m.IsActive).Select(m => new SelectListItem
-        {
-            Value = m.Id.ToString(),
-            Text = $"{m.MeterNumber} - {(m.Type == "Electric" ? "Điện" : "Nước")} - {m.CustomerName}"
-        }).ToList();
+        var meters = await _apiClient.GetAsync<List<MeterDto>>("meters");
+        var meterItems = (meters ?? new List<MeterDto>())
+            .Where(m => m.IsActive)
+            .Select(m => new SelectListItem
+            {
+                Value = m.Id.ToString(),
+                Text = $"{m.MeterNumber} - {(m.Type == "Electric" ? "Điện" : "Nước")} - {m.CustomerName}"
+            }).ToList();
         ViewBag.Meters = meterItems;
     }
 
@@ -77,7 +80,7 @@ public class ReadingsController : Controller
     {
         try
         {
-            var reading = await _readingService.GetReadingByIdAsync(id);
+            var reading = await _apiClient.GetAsync<ReadingDto>($"readings/{id}");
             if (reading == null)
             {
                 TempData["Error"] = "Không tìm thấy chỉ số!";
@@ -107,14 +110,14 @@ public class ReadingsController : Controller
     {
         if (!ModelState.IsValid)
         {
-            var reading = await _readingService.GetReadingByIdAsync(id);
+            var reading = await _apiClient.GetAsync<ReadingDto>($"readings/{id}");
             ViewBag.Reading = reading;
             return View(dto);
         }
 
         try
         {
-            var result = await _readingService.UpdateReadingAsync(id, dto);
+            var result = await _apiClient.PutAsync<ReadingDto>($"readings/{id}", dto);
             if (result == null)
             {
                 TempData["Error"] = "Không tìm thấy chỉ số cần sửa!";
@@ -128,7 +131,7 @@ public class ReadingsController : Controller
         catch (Exception ex)
         {
             TempData["Error"] = ex.Message;
-            var reading = await _readingService.GetReadingByIdAsync(id);
+            var reading = await _apiClient.GetAsync<ReadingDto>($"readings/{id}");
             ViewBag.Reading = reading;
             return View(dto);
         }
@@ -140,7 +143,7 @@ public class ReadingsController : Controller
     {
         try
         {
-            var result = await _readingService.DeleteReadingAsync(id);
+            var result = await _apiClient.DeleteAsync($"readings/{id}");
             if (result)
             {
                 TempData["Success"] = "Đã xóa chỉ số thành công!";

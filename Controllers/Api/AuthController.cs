@@ -35,7 +35,7 @@ public class ApiAuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = "Bearer,Cookies", Roles = "Admin")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
         try
@@ -50,7 +50,7 @@ public class ApiAuthController : ControllerBase
     }
 
     [HttpPost("change-password")]
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize(AuthenticationSchemes = "Bearer,Cookies")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
     {
         try
