@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using QL_HethongDiennuoc.Data;
 using QL_HethongDiennuoc.Models.Entities;
 using QL_HethongDiennuoc.Services.Interfaces;
+using MimeKit;
+using MailKit.Net.Smtp;
+using MailKit.Security;
 
 namespace QL_HethongDiennuoc.Services.Implementations;
 
@@ -152,29 +155,32 @@ Ban quản lý điện nước
 
             using var client = new MailKit.Net.Smtp.SmtpClient();
             
-            // Connect to SMTP server
-            await client.ConnectAsync(smtpServer, smtpPort, MailKit.Security.SecureSocketOptions.StartTls);
-            
-            // Authenticate if credentials provided
-            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
-            {
-                await client.AuthenticateAsync(username, password);
-            }
-            
             // Create message
             var message = new MimeKit.MimeMessage();
             message.From.Add(new MimeKit.MailboxAddress(senderName, senderEmail));
             message.To.Add(new MimeKit.MailboxAddress("", to));
             message.Subject = subject;
             
-            var bodyBuilder = new MimeKit.BodyBuilder
+            var bodyBuilder = new BodyBuilder
             {
                 TextBody = body,
                 HtmlBody = $"<pre>{body}</pre>" // Simple HTML formatting
             };
             message.Body = bodyBuilder.ToMessageBody();
+
+            // MailHog doesn't support TLS, use plain SMTP
+            var secureOptions = smtpServer.Contains("mailhog") || smtpServer == "localhost" 
+                ? MailKit.Security.SecureSocketOptions.None 
+                : MailKit.Security.SecureSocketOptions.StartTls;
             
-            // Send message
+            await client.ConnectAsync(smtpServer, smtpPort, secureOptions);
+            
+            // Only authenticate if username/password provided (MailHog doesn't need auth)
+            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+            {
+                await client.AuthenticateAsync(username, password);
+            }
+            
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
             

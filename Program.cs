@@ -152,6 +152,7 @@ using (var scope = app.Services.CreateScope())
     DbInitializer.Initialize(db);
 }
 
+
 // Middleware pipeline
 if (app.Environment.IsDevelopment())
 {
