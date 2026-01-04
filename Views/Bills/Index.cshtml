@@ -7,9 +7,14 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="bi bi-receipt"></i> Quản lý Hóa đơn</h2>
-    <a asp-controller="Bills" asp-action="Generate" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Tạo hóa đơn
-    </a>
+    <div>
+        <button class="btn btn-warning me-2" onclick="sendBulkBillNotifications()">
+            <i class="bi bi-envelope-fill"></i> Gửi thông báo hàng loạt
+        </button>
+        <a asp-controller="Bills" asp-action="Generate" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Tạo hóa đơn
+        </a>
+    </div>
 </div>
 
 
@@ -75,6 +80,11 @@
                                     <a href="/api/bills/@bill.Id/pdf" class="btn btn-outline-success" target="_blank" title="Tải PDF">
                                         <i class="bi bi-file-pdf"></i>
                                     </a>
+                                    <button class="btn btn-outline-warning" 
+                                            title="Gửi thông báo"
+                                            onclick="sendBillNotification(@bill.Id, '@bill.BillNumber', '@bill.CustomerName')">
+                                        <i class="bi bi-envelope"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -95,3 +105,97 @@
         }
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Gửi thông báo hóa đơn
+        async function sendBillNotification(billId, billNumber, customerName) {
+            if (!confirm(`Gửi thông báo hóa đơn ${billNumber} cho ${customerName}?\n\nEmail và SMS sẽ được gửi đến khách hàng.`)) {
+                return;
+            }
+
+            const button = event.target.closest('button');
+            const originalHtml = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            try {
+                const response = await fetch(`/api/bills/${billId}/send-notification`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`✅ Đã gửi thông báo thành công!\n\nHóa đơn: ${billNumber}\nKhách hàng: ${customerName}\n\nEmail và SMS đã được gửi.`);
+                } else {
+                    alert(`❌ Lỗi: ${data.message || 'Không thể gửi thông báo'}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Có lỗi xảy ra khi gửi thông báo. Vui lòng thử lại.');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+            }
+        }
+
+        // Gửi thông báo hàng loạt
+        async function sendBulkBillNotifications() {
+            // Count unpaid bills
+            const unpaidCount = @Model.Count(b => b.Status != "Paid");
+            
+            if (unpaidCount === 0) {
+                alert('Không có hóa đơn chưa thanh toán nào để gửi thông báo.');
+                return;
+            }
+
+            if (!confirm(`Bạn có chắc muốn gửi thông báo cho ${unpaidCount} hóa đơn chưa thanh toán?\n\nEmail và SMS sẽ được gửi đến tất cả khách hàng.`)) {
+                return;
+            }
+
+            const button = event.target.closest('button');
+            const originalHtml = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang gửi...';
+
+            try {
+                const response = await fetch('/api/bills/send-bulk-notifications', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    let message = `✅ Hoàn tất gửi thông báo hàng loạt!\n\n`;
+                    message += `📊 Tổng số hóa đơn: ${data.totalBills}\n`;
+                    message += `✅ Đã gửi thành công: ${data.notificationsSent}\n`;
+                    
+                    if (data.errors && data.errors.length > 0) {
+                        message += `\n❌ Có ${data.errors.length} lỗi:\n`;
+                        message += data.errors.slice(0, 5).join('\n');
+                        if (data.errors.length > 5) {
+                            message += `\n... và ${data.errors.length - 5} lỗi khác`;
+                        }
+                    }
+
+                    alert(message);
+                } else {
+                    alert(`❌ Lỗi: ${data.message || 'Không thể gửi thông báo'}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Có lỗi xảy ra khi gửi thông báo hàng loạt. Vui lòng thử lại.');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+            }
+        }
+    </script>
+}

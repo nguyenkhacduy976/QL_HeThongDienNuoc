@@ -12,8 +12,8 @@ public interface IReportService
 public interface INotificationService
 {
     Task SendBillNotificationAsync(int billId);
-    Task SendPaymentConfirmationAsync(int paymentId);
-    Task SendServiceSuspensionWarningAsync(int customerId);
+    Task SendPaymentDueReminderAsync(int billId);
+    Task SendPaymentOverdueReminderAsync(int billId, int daysOverdue);
     Task SendEmailAsync(string to, string subject, string body);
     Task SendSmsAsync(string phoneNumber, string message);
 }

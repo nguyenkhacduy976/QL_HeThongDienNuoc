@@ -39,6 +39,11 @@ public class Bill
     [StringLength(500)]
     public string? Notes { get; set; }
 
+    // Reminder tracking
+    public DateTime? LastReminderSent { get; set; }
+    
+    public int ReminderCount { get; set; } = 0;
+
     // Foreign keys
     [Required]
     public int ReadingId { get; set; }

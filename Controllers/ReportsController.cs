@@ -25,12 +25,12 @@ public class ReportsController : Controller
         try
         {
             var revenueReport = await _apiClient.GetAsync<RevenueReportDto>($"reports/revenue?startDate={firstDayOfMonth:yyyy-MM-dd}");
-            var outstandingBills = await _apiClient.GetAsync<List<BillDto>>("reports/outstanding");
+            var outstandingBills = await _apiClient.GetAsync<List<OutstandingBillDto>>("reports/outstanding");
             
             ViewBag.TotalElectric = 0m; // Would need consumption report API
             ViewBag.TotalWater = 0m;
             ViewBag.MonthlyRevenue = revenueReport?.TotalRevenue ?? 0m;
-            ViewBag.OutstandingDebt = (outstandingBills ?? new List<BillDto>()).Sum(b => b.Amount - b.PaidAmount);
+            ViewBag.OutstandingDebt = (outstandingBills ?? new List<OutstandingBillDto>()).Sum(b => b.OutstandingAmount);
         }
         catch
         {
@@ -78,7 +78,7 @@ public class ReportsController : Controller
     
     public async Task<IActionResult> Outstanding()
     {
-        var bills = await _apiClient.GetAsync<List<BillDto>>("reports/outstanding");
-        return View(bills ?? new List<BillDto>());
+        var bills = await _apiClient.GetAsync<List<OutstandingBillDto>>("reports/outstanding");
+        return View(bills ?? new List<OutstandingBillDto>());
     }
 }

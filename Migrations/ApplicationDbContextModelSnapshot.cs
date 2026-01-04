@@ -56,6 +56,12 @@ namespace QL_HethongDiennuoc.Migrations
                     b.Property<int>("ReadingId")
                         .HasColumnType("int");
 
+                    b.Property<int>("ReminderCount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastReminderSent")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 

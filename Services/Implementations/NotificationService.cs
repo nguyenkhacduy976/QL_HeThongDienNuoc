@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using QL_HethongDiennuoc.Data;
+using QL_HethongDiennuoc.Models.Entities;
 using QL_HethongDiennuoc.Services.Interfaces;
 
 namespace QL_HethongDiennuoc.Services.Implementations;
@@ -52,58 +53,89 @@ Ban quản lý điện nước
         }
     }
 
-    public async Task SendPaymentConfirmationAsync(int paymentId)
+    public async Task SendPaymentDueReminderAsync(int billId)
     {
-        var payment = await _context.Payments
-            .Include(p => p.Bill)
-                .ThenInclude(b => b.Customer)
-            .FirstOrDefaultAsync(p => p.Id == paymentId);
+        var bill = await _context.Bills
+            .Include(b => b.Customer)
+            .FirstOrDefaultAsync(b => b.Id == billId);
 
-        if (payment == null) return;
+        if (bill == null) return;
 
-        var subject = $"Xác nhận thanh toán hóa đơn {payment.Bill.BillNumber}";
+        var daysUntilDue = (bill.DueDate - DateTime.Now).Days;
+
+        var subject = $"Nhắc nhở: Hóa đơn {bill.BillNumber} sắp đến hạn thanh toán";
         var body = $@"
-Kính gửi {payment.Bill.Customer.FullName},
+Kính gửi {bill.Customer.FullName},
 
-Chúng tôi đã nhận được khoản thanh toán của quý khách:
-- Hóa đơn: {payment.Bill.BillNumber}
-- Số tiền: {payment.Amount:#,##0} VNĐ
-- Ngày thanh toán: {payment.PaymentDate:dd/MM/yyyy HH:mm}
-- Phương thức: {payment.Method}
+Hóa đơn điện nước của quý khách sắp đến hạn thanh toán:
+- Số hóa đơn: {bill.BillNumber}
+- Số tiền: {bill.Amount:#,##0} VNĐ
+- Hạn thanh toán: {bill.DueDate:dd/MM/yyyy} (còn {daysUntilDue} ngày)
 
-Cảm ơn quý khách đã thanh toán.
+Vui lòng thanh toán trước hạn để tránh phát sinh phí chậm thanh toán.
 
 Trân trọng,
 Ban quản lý điện nước
 ";
 
-        await SendEmailAsync(payment.Bill.Customer.Email ?? "", subject, body);
+        await SendEmailAsync(bill.Customer.Email ?? "", subject, body);
+
+        if (!string.IsNullOrEmpty(bill.Customer.PhoneNumber))
+        {
+            var smsMessage = $"Nhac nho: Hoa don {bill.BillNumber} {bill.Amount:#,0} VND den han {bill.DueDate:dd/MM} (con {daysUntilDue} ngay).";
+            await SendSmsAsync(bill.Customer.PhoneNumber, smsMessage);
+        }
+
+        // Update reminder tracking
+        bill.LastReminderSent = DateTime.Now;
+        bill.ReminderCount++;
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("✅ Payment due reminder sent for Bill #{BillId}", billId);
     }
 
-    public async Task SendServiceSuspensionWarningAsync(int customerId)
+    public async Task SendPaymentOverdueReminderAsync(int billId, int daysOverdue)
     {
-        var customer = await _context.Customers.FindAsync(customerId);
-        if (customer == null) return;
+        var bill = await _context.Bills
+            .Include(b => b.Customer)
+            .FirstOrDefaultAsync(b => b.Id == billId);
 
-        var subject = "Cảnh báo: Sắp cắt dịch vụ do nợ tiền";
+        if (bill == null) return;
+
+        var urgencyLevel = daysOverdue <= 3 ? "KHẨN" : "RẤT KHẨN";
+        var subject = $"[{urgencyLevel}] Hóa đơn {bill.BillNumber} đã quá hạn {daysOverdue} ngày";
         var body = $@"
-Kính gửi {customer.FullName},
+Kính gửi {bill.Customer.FullName},
 
-Tài khoản của quý khách có hóa đơn quá hạn chưa thanh toán.
-Vui lòng thanh toán trong vòng 3 ngày để tránh bị cắt dịch vụ.
+Hóa đơn điện nước của quý khách đã quá hạn thanh toán:
+- Số hóa đơn: {bill.BillNumber}
+- Số tiền: {bill.Amount:#,##0} VNĐ
+- Hạn thanh toán: {bill.DueDate:dd/MM/yyyy}
+- Đã quá hạn: {daysOverdue} ngày
 
+⚠️ CẢNH BÁO: Nếu không thanh toán trong vòng 3 ngày, dịch vụ của quý khách sẽ bị tạm ngưng.
+
+Vui lòng thanh toán ngay để tránh gián đoạn dịch vụ.
 Liên hệ: admin@qldienuoc.vn
 
 Trân trọng,
 Ban quản lý điện nước
 ";
 
-        await SendEmailAsync(customer.Email ?? "", subject, body);
+        await SendEmailAsync(bill.Customer.Email ?? "", subject, body);
 
-        if (!string.IsNullOrEmpty(customer.PhoneNumber))
+        if (!string.IsNullOrEmpty(bill.Customer.PhoneNumber))
         {
-            await SendSmsAsync(customer.PhoneNumber, "Canh bao: Tai khoan co hoa don qua han. Thanh toan de tranh cat dich vu!");
+            var smsMessage = $"[{urgencyLevel}] Hoa don {bill.BillNumber} qua han {daysOverdue} ngay. {bill.Amount:#,0} VND. Thanh toan gap!";
+            await SendSmsAsync(bill.Customer.PhoneNumber, smsMessage);
         }
+
+        // Update reminder tracking
+        bill.LastReminderSent = DateTime.Now;
+        bill.ReminderCount++;
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("⚠️ Overdue payment reminder sent for Bill #{BillId}, Days Overdue: {DaysOverdue}", billId, daysOverdue);
     }
 
     public async Task SendEmailAsync(string to, string subject, string body)
@@ -170,9 +202,11 @@ Ban quản lý điện nước
                 
                 if (string.IsNullOrEmpty(apiKey) || string.IsNullOrEmpty(secretKey))
                 {
-                    _logger.LogWarning("SMS provider configured but missing API credentials");
+                    _logger.LogWarning("⚠️ SMS provider configured but missing API credentials");
                     return;
                 }
+                
+                _logger.LogInformation("📱 Attempting to send SMS to {PhoneNumber} via ESMS", phoneNumber);
                 
                 using var httpClient = new HttpClient();
                 var requestData = new
@@ -189,13 +223,15 @@ Ban quản lý điện nước
                     "http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/",
                     requestData);
                 
+                var responseBody = await response.Content.ReadAsStringAsync();
+                
                 if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogInformation("✅ SMS sent successfully to {PhoneNumber}", phoneNumber);
+                    _logger.LogInformation("✅ SMS sent successfully to {PhoneNumber}. Response: {Response}", phoneNumber, responseBody);
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ SMS failed with status {Status}", response.StatusCode);
+                    _logger.LogWarning("⚠️ SMS failed with status {Status}. Response: {Response}", response.StatusCode, responseBody);
                 }
             }
             else

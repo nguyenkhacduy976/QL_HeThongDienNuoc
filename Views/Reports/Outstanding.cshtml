@@ -48,10 +48,10 @@
         <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Danh sách hóa đơn quá hạn</h5>
             <div>
-                <button class="btn btn-sm btn-success me-2">
+                <button class="btn btn-sm btn-success me-2" disabled>
                     <i class="bi bi-file-earmark-excel"></i> Xuất Excel
                 </button>
-                <button class="btn btn-sm btn-warning">
+                <button class="btn btn-sm btn-warning" onclick="sendBulkReminders()">
                     <i class="bi bi-envelope"></i> Gửi nhắc nợ hàng loạt
                 </button>
             </div>
@@ -111,7 +111,9 @@
                                            class="btn btn-outline-primary" title="Xem chi tiết">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <button class="btn btn-outline-warning" title="Gửi nhắc nợ">
+                                        <button class="btn btn-outline-warning" 
+                                                title="Gửi nhắc nợ"
+                                                onclick="sendReminder(@bill.BillId, '@bill.BillNumber')">
                                             <i class="bi bi-bell"></i>
                                         </button>
                                     </div>
@@ -137,4 +139,96 @@ else
     <div class="alert alert-success">
         <i class="bi bi-check-circle"></i> <strong>Tuyệt vời!</strong> Hiện tại không có hóa đơn quá hạn nào.
     </div>
+}
+
+@section Scripts {
+    <script>
+        // Gửi nhắc nợ cho 1 hóa đơn
+        async function sendReminder(billId, billNumber) {
+            if (!confirm(`Bạn có chắc muốn gửi nhắc nở cho hóa đơn ${billNumber}?`)) {
+                return;
+            }
+
+            const button = event.target.closest('button');
+            const originalHtml = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            try {
+                const response = await fetch(`/api/payments/${billId}/send-reminder`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`✅ Đã gửi nhắc nở thành công cho hóa đơn ${billNumber}!\n\nEmail và SMS đã được gửi đến khách hàng.`);
+                } else {
+                    alert(`❌ Lỗi: ${data.message || 'Không thể gửi nhắc nở'}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Có lỗi xảy ra khi gửi nhắc nở. Vui lòng thử lại.');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+            }
+        }
+
+        // Gửi nhắc nợ hàng loạt
+        async function sendBulkReminders() {
+            const billCount = @Model.Count;
+            if (!confirm(`Bạn có chắc muốn gửi nhắc nở cho ${billCount} hóa đơn quá hạn?\n\nĐiều này sẽ gửi email và SMS đến tất cả khách hàng.`)) {
+                return;
+            }
+
+            const button = event.target;
+            const originalHtml = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang gửi...';
+
+            try {
+                const response = await fetch('/api/payments/send-bulk-reminders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    let message = `✅ Hoàn tất gửi nhắc nở hàng loạt!\n\n`;
+                    message += `📊 Tổng số hóa đơn: ${data.totalBills}\n`;
+                    message += `✅ Đã gửi thành công: ${data.remindersSent}\n`;
+                    
+                    if (data.errors && data.errors.length > 0) {
+                        message += `\n❌ Có ${data.errors.length} lỗi:\n`;
+                        message += data.errors.slice(0, 5).join('\n');
+                        if (data.errors.length > 5) {
+                            message += `\n... và ${data.errors.length - 5} lỗi khác`;
+                        }
+                    }
+
+                    alert(message);
+                    
+                    // Reload trang để cập nhật
+                    if (data.remindersSent > 0) {
+                        location.reload();
+                    }
+                } else {
+                    alert(`❌ Lỗi: ${data.message || 'Không thể gửi nhắc nở'}`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Có lỗi xảy ra khi gửi nhắc nở hàng loạt. Vui lòng thử lại.');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+            }
+        }
+    </script>
 }

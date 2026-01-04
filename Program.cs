@@ -63,6 +63,9 @@ builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IDebtManagementService, DebtManagementService>();
 
+// Background Jobs
+builder.Services.AddHostedService<QL_HethongDiennuoc.Services.Jobs.PaymentReminderJob>();
+
 
 // Authentication: Cookie for MVC, JWT for API
 var jwtSettings = builder.Configuration.GetSection("Jwt");
