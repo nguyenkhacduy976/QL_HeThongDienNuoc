@@ -151,7 +151,7 @@ public class BillingService : IBillingService
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(11));
+                page.DefaultTextStyle(x => x.FontSize(11).FontFamily("Arial"));
 
                 page.Header()
                     .Text("HÓA ĐƠN ĐIỆN NƯỚC")
