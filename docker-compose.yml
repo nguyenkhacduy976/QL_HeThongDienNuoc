@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ql_diennuoc_db
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Admin@123
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - ql_diennuoc_network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ql_diennuoc_cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ql_diennuoc_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  # MailHog (Email Testing Tool)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ql_diennuoc_mailhog
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    networks:
+      - ql_diennuoc_network
+
+  # ASP.NET Core Application
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ql_diennuoc_app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5058
+      - ApiSettings__BaseUrl=http://localhost:5058/api
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=QL_DienNuoc;User Id=sa;Password=Admin@123;TrustServerCertificate=True;
+      - ConnectionStrings__RedisConnection=redis:6379
+      # MailHog configuration for local testing
+      - Email__SmtpServer=mailhog
+      - Email__SmtpPort=1025
+      - Email__SenderEmail=noreply@qldienuoc.local
+      - Email__SenderName=Hệ thống Điện Nước
+      - Email__Username=
+      - Email__Password=
+      # SMS Mock for development
+      - Sms__Provider=Mock
+    ports:
+      - "5058:5058"
+    depends_on:
+      - sqlserver
+      - redis
+      - mailhog
+    networks:
+      - ql_diennuoc_network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  ql_diennuoc_network:
+    driver: bridge
