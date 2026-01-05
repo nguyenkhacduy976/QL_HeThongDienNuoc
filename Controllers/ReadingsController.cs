@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using QL_HethongDiennuoc.Models.DTOs;
 using QL_HethongDiennuoc.Services.ApiClients;
+using QL_HethongDiennuoc.Utilities;
 
 namespace QL_HethongDiennuoc.Controllers;
 
@@ -25,7 +26,7 @@ public class ReadingsController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Lỗi tải dữ liệu: " + ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError("Lỗi tải dữ liệu: " + ex.Message);
             return View(new List<ReadingDto>());
         }
     }
@@ -57,7 +58,7 @@ public class ReadingsController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Có lỗi xảy ra: " + ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError("Có lỗi xảy ra: " + ex.Message);
             await LoadMetersToViewBag();
             return View(dto);
         }
@@ -99,7 +100,7 @@ public class ReadingsController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError(ex.Message);
             return RedirectToAction(nameof(Index));
         }
     }
@@ -155,7 +156,7 @@ public class ReadingsController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError(ex.Message);
         }
         return RedirectToAction(nameof(Index));
     }

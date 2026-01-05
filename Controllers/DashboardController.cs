@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QL_HethongDiennuoc.Models.DTOs;
 using QL_HethongDiennuoc.Services.ApiClients;
+using QL_HethongDiennuoc.Utilities;
 using System.Security.Claims;
 
 namespace QL_HethongDiennuoc.Controllers;
@@ -86,7 +87,7 @@ public class DashboardController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Lỗi tải dữ liệu: " + ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError("Lỗi tải dữ liệu: " + ex.Message);
         }
 
         return View();

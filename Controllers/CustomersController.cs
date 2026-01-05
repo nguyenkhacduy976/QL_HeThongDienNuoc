@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QL_HethongDiennuoc.Models.DTOs;
 using QL_HethongDiennuoc.Services.ApiClients;
+using QL_HethongDiennuoc.Utilities;
 
 namespace QL_HethongDiennuoc.Controllers;
 
@@ -24,7 +25,7 @@ public class CustomersController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Lỗi tải dữ liệu: " + ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError("Lỗi tải dữ liệu: " + ex.Message);
             return View(new List<CustomerDto>());
         }
     }
@@ -40,7 +41,7 @@ public class CustomersController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError(ex.Message);
         }
 
         return RedirectToAction(nameof(Index));
@@ -62,7 +63,7 @@ public class CustomersController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Lỗi: " + ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError("Lỗi: " + ex.Message);
             return RedirectToAction(nameof(Index));
         }
     }
@@ -85,7 +86,7 @@ public class CustomersController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Có lỗi xảy ra: " + ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError("Có lỗi xảy ra: " + ex.Message);
             var customer = await _apiClient.GetAsync<CustomerDto>($"customers/{id}");
             return View(customer);
         }

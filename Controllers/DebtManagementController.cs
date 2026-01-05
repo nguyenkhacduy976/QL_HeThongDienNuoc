@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using QL_HethongDiennuoc.Models.DTOs;
 using QL_HethongDiennuoc.Services.ApiClients;
+using QL_HethongDiennuoc.Utilities;
 
 namespace QL_HethongDiennuoc.Controllers;
 
@@ -33,7 +34,7 @@ public class DebtManagementController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Lỗi tải dữ liệu: " + ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError("Lỗi tải dữ liệu: " + ex.Message);
             return View(new List<DebtManagementDto>());
         }
     }
@@ -49,7 +50,7 @@ public class DebtManagementController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError(ex.Message);
         }
 
         return RedirectToAction(nameof(Index));

@@ -7,6 +7,7 @@ using QL_HethongDiennuoc.Helpers;
 using QL_HethongDiennuoc.Models.DTOs;
 using QL_HethongDiennuoc.Models.Entities;
 using QL_HethongDiennuoc.Services.ApiClients;
+using QL_HethongDiennuoc.Utilities;
 using System.Security.Claims;
 
 namespace QL_HethongDiennuoc.Controllers;
@@ -32,7 +33,7 @@ public class BillsController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Lỗi tải dữ liệu: " + ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError("Lỗi tải dữ liệu: " + ex.Message);
             return View(new List<BillDto>());
         }
     }
@@ -72,7 +73,7 @@ public class BillsController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Có lỗi xảy ra: " + ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError("Có lỗi xảy ra: " + ex.Message);
             await LoadUnbilledReadingsToViewBag(dto.ReadingId);
             return View(dto);
         }
@@ -106,7 +107,7 @@ public class BillsController : Controller
         }
         catch (Exception ex)
         {
-            TempData["Error"] = "Lỗi: " + ex.Message;
+            TempData["Error"] = MessageHelper.GetUserFriendlyError("Lỗi: " + ex.Message);
             return RedirectToAction(nameof(Index));
         }
     }
